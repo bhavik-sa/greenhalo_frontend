@@ -1,0 +1,173 @@
+<div class="login-page bg-body-secondary">
+    <div class="login-box">
+        <div class="login-logo">
+            <a href="#"><b>Admin</b>LTE</a>
+        </div>
+        
+        <!-- Login Form -->
+        <div class="card" *ngIf="showLogin">
+            <div class="card-body login-card-body">
+                <p class="login-box-msg">Sign in to start your session</p>
+                
+                <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
+                    <div class="input-group mb-3">
+                        <input 
+                            type="email" 
+                            class="form-control" 
+                            placeholder="Email"
+                            formControlName="email"
+                            [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+                        <div class="input-group-text">
+                            <span class="bi bi-envelope"></span>
+                        </div>
+                        <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="invalid-feedback">
+                            <div *ngIf="loginForm.get('email')?.errors?.['required']">Email is required</div>
+                            <div *ngIf="loginForm.get('email')?.errors?.['email']">Please enter a valid email</div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group mb-3">
+                        <input 
+                            [type]="showPassword ? 'text' : 'password'"
+                            class="form-control" 
+                            placeholder="Password"
+                            formControlName="password"
+                            [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+                        <button
+                            type="button"
+                            class="input-group-text bg-transparent"
+                            (click)="togglePassword()"
+                            [attr.aria-label]="showPassword ? 'Hide password' : 'Show password'"
+                            title="Toggle password visibility">
+                            <span class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></span>
+                        </button>
+                        <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="invalid-feedback">
+                            <div *ngIf="loginForm.get('password')?.errors?.['required']">Password is required</div>
+                            <div *ngIf="loginForm.get('password')?.errors?.['minlength']">Password must be at least 6 characters</div>
+                        </div>
+                    </div>
+                    
+                    <!-- <div *ngIf="error" class="alert alert-danger">
+                        {{ error }}
+                    </div> -->
+                    
+                    <div class="row mb-3">
+                        <div class="col-12 text-end">
+                            <a href="#" (click)="$event.preventDefault(); openForgotPassword()">Forgot your password?</a>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <button 
+                                type="submit" 
+                                class="btn btn-primary w-100"
+                                [disabled]="isLoading || loginForm.invalid">
+                                <span *ngIf="!isLoading">Sign In</span>
+                                <span *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span *ngIf="isLoading" class="visually-hidden">Loading...</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Popup Overlay -->
+<div *ngIf="showSuccessPopup" class="success-overlay">
+    <div class="success-popup-container">
+        <div class="success-popup">
+            <div class="success-icon">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+            <div class="success-content">
+                <h5>Check Your Email</h5>
+                <p>We've sent a password reset link to your email address.</p>
+                <p class="text-muted small">Please check your inbox and follow the instructions to reset your password.</p>
+                <button type="button" class="btn btn-primary mt-3" (click)="onBackToLogin()">
+                    Back to Login
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--begin::Third Party Plugin(OverlayScrollbars)-->
+<script src="https://cdn.jsdelivr.net/npm/overlayscrollbars@2.3.0/browser/overlayscrollbars.browser.es6.min.js" integrity="sha256-H2VM7BKda+v2Z4+DRy69uknwxjyDRhszjXFhsL4gD3w=" crossorigin="anonymous"></script> <!--end::Third Party Plugin(OverlayScrollbars)--><!--begin::Required Plugin(popperjs for Bootstrap 5)-->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha256-whL0tQWoY1Ku1iskqPFvmZ+CHsvmRWx/PIoEvIeWh4I=" crossorigin="anonymous"></script> <!--end::Required Plugin(popperjs for Bootstrap 5)--><!--begin::Required Plugin(Bootstrap 5)-->
+<!-- Forgot Password Modal -->
+<div class="modal fade" [class.show]="showForgotPasswordModal" [style.display]="showForgotPasswordModal ? 'block' : 'none'" tabindex="-1" role="dialog" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="forgotPasswordModalLabel">Reset Password</h5>
+            
+            </div>
+            <div class="modal-body">
+                <div *ngIf="!resetLinkSent">
+                    <p>Enter your email address and we'll send you a link to reset your password.</p>
+                    <form [formGroup]="forgotPasswordForm" (ngSubmit)="onForgotPasswordSubmit()" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label for="forgotEmail" class="form-label">Email address</label>
+                            <div class="input-group">
+                                <input 
+                                    type="email" 
+                                    class="form-control" 
+                                    id="forgotEmail"
+                                    formControlName="email"
+                                    [class.is-invalid]="forgotPasswordForm.get('email')?.invalid && forgotPasswordForm.get('email')?.touched"
+                                    placeholder="Enter your email">
+                                <span class="input-group-text">
+                                    <i class="bi bi-envelope"></i>
+                                </span>
+                                <div *ngIf="forgotPasswordForm.get('email')?.invalid && forgotPasswordForm.get('email')?.touched" class="invalid-feedback">
+                                    <div *ngIf="forgotPasswordForm.get('email')?.errors?.['required']">Email is required</div>
+                                    <div *ngIf="forgotPasswordForm.get('email')?.errors?.['email']">Please enter a valid email</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer px-0 pb-0">
+                            <button type="button" class="btn btn-secondary" (click)="closeForgotPassword()">Cancel</button>
+                            <button type="submit" class="btn btn-primary" [disabled]="isSendingResetLink || forgotPasswordForm.invalid">
+                                <span *ngIf="!isSendingResetLink">Send Reset Link</span>
+                                <span *ngIf="isSendingResetLink" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div *ngIf="resetLinkSent" class="alert alert-success">
+                    <i class="fas fa-check-circle"></i> Password reset link has been sent to your email. Please check your inbox.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal-backdrop fade show" *ngIf="showForgotPasswordModal" (click)="closeForgotPassword()"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha256-YMa+wAM6QkVyz999odX7lPRxkoYAan8suedu4k2Zur8=" crossorigin="anonymous"></script> <!--end::Required Plugin(Bootstrap 5)--><!--begin::Required Plugin(AdminLTE)-->
+<script src="../../../dist/js/adminlte.js"></script> <!--end::Required Plugin(AdminLTE)--><!--begin::OverlayScrollbars Configure-->
+<script>
+    const SELECTOR_SIDEBAR_WRAPPER = ".sidebar-wrapper";
+    const Default = {
+        scrollbarTheme: "os-theme-light",
+        scrollbarAutoHide: "leave",
+        scrollbarClickScroll: true,
+    };
+    document.addEventListener("DOMContentLoaded", function() {
+        const sidebarWrapper = document.querySelector(SELECTOR_SIDEBAR_WRAPPER);
+        if (
+            sidebarWrapper &&
+            typeof OverlayScrollbarsGlobal?.OverlayScrollbars !== "undefined"
+        ) {
+            OverlayScrollbarsGlobal.OverlayScrollbars(sidebarWrapper, {
+                scrollbars: {
+                    theme: Default.scrollbarTheme,
+                    autoHide: Default.scrollbarAutoHide,
+                    clickScroll: Default.scrollbarClickScroll,
+                },
+            });
+        }
+    });
+</script> <!--end::OverlayScrollbars Configure--> <!--end::Script-->

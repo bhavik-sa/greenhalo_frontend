@@ -1,0 +1,271 @@
+<!-- contact-us.html -->
+<div class="container-fluid py-4">
+    <div class="row mb-4 align-items-center">
+      <div class="col-md-6">
+        <h2 class="mb-0">Contact Requests</h2>
+      </div>
+    </div>
+  
+    <!-- Loading Indicator -->
+    <div *ngIf="isLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2">Loading contact requests...</p>
+    </div>
+  
+    <!-- Error Message -->
+    <div *ngIf="error && !isLoading" class="alert alert-danger">
+      {{ error }}
+    </div>
+  
+    <!-- Contact Requests Table -->
+    <div *ngIf="!isLoading && !error" class="card border-0 shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>User</th>
+                <th>Subject</th>
+                <th>Message</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let request of contactRequests">
+                <td>
+                  <div class="fw-medium">{{ request.user_id?.email }}</div>
+                </td>
+                <td>{{ request.subject }}</td>
+                <td class="text-truncate" style="max-width: 200px;" title="{{ request.message }}">
+                  {{ request.message }}
+                </td>
+                <td>
+                  <span [class]="getStatusBadgeClass(request.status)" class="badge">
+                    {{ request.status | titlecase }}
+                  </span>
+                </td>
+                <td>{{ request.createdAt | date:'short' }}</td>
+                <td class="text-end">
+                  <button 
+                  class="btn btn-sm btn-outline-primary me-1"
+                  (click)="openResponseModal(request)"
+                  title="Respond to request"
+                >
+                  <i class="bi bi-reply"></i>
+                </button>
+                
+                <!-- Update the View Details button in the table -->
+                <button 
+                  class="btn btn-sm btn-outline-secondary me-1"
+                  (click)="viewRequestDetails(request)"
+                  title="View details"
+                >
+                  <i class="bi bi-eye"></i>
+                </button>
+                </td>
+              </tr>
+              <tr *ngIf="contactRequests.length === 0">
+                <td colspan="6" class="text-center py-4 text-muted">
+                  No contact requests found.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+  
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center p-3 border-top">
+          <div class="d-flex align-items-center">
+            <span class="me-3 text-muted">
+              Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to 
+              <!-- {{ Math.min(currentPage * itemsPerPage, totalItems) }} of -->
+              {{ totalItems }} entries
+            </span>
+          </div>
+          
+          <nav *ngIf="totalPages > 1">
+            <ul class="pagination mb-0">
+              <li class="page-item" [class.disabled]="currentPage === 1">
+                <a class="page-link" href="javascript:void(0)" (click)="onPageChange(1)" aria-label="First">
+                  <span aria-hidden="true">&laquo;&laquo;</span>
+                </a>
+              </li>
+              <li class="page-item" [class.disabled]="currentPage === 1">
+                <a class="page-link" href="javascript:void(0)" (click)="onPageChange(currentPage - 1)" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+                </a>
+              </li>
+              
+              <ng-container *ngFor="let page of getPaginationArray()">
+                <li class="page-item" [class.active]="page === currentPage">
+                  <a class="page-link" href="javascript:void(0)" (click)="onPageChange(page)">{{ page }}</a>
+                </li>
+              </ng-container>
+              
+              <li class="page-item" [class.disabled]="currentPage === totalPages">
+                <a class="page-link" href="javascript:void(0)" (click)="onPageChange(currentPage + 1)" aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+              <li class="page-item" [class.disabled]="currentPage === totalPages">
+                <a class="page-link" href="javascript:void(0)" (click)="onPageChange(totalPages)" aria-label="Last">
+                  <span aria-hidden="true">&raquo;&raquo;</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Response Modal -->
+  <div class="modal fade" [class.show]="showResponseModal" [style.display]="showResponseModal ? 'block' : 'none'" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Respond to Request</h5>
+          <button type="button" class="btn-close" (click)="closeResponseModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" *ngIf="selectedRequest">
+          <div class="mb-3">
+            <h6>Request Details</h6>
+            <table class="table table-sm">
+              <tr>
+                <th style="width: 120px;">From</th>
+                <td>{{ selectedRequest.user_id?.email }}</td>
+              </tr>
+              <tr>
+                <th>Subject</th>
+                <td>{{ selectedRequest.subject }}</td>
+              </tr>
+              <tr>
+                <th>Message</th>
+                <td class="border rounded p-2 bg-light">{{ selectedRequest.message }}</td>
+              </tr>
+              <tr>
+                <th>Status</th>
+                <td>
+                  <select class="form-select" [(ngModel)]="responseForm.status">
+                    <option *ngFor="let status of statusOptions" [value]="status">
+                      {{ status | titlecase }}
+                    </option>
+                  </select>
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Your Response</label>
+            <textarea 
+              class="form-control" 
+              rows="5"
+              [(ngModel)]="responseForm.response"
+              placeholder="Type your response here..."
+              required
+            ></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeResponseModal()" [disabled]="isLoading">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" (click)="submitResponse()" [disabled]="isLoading">
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+            Submit Response
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="modal fade" [class.show]="showDetailsModal" [style.display]="showDetailsModal ? 'block' : 'none'" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content" *ngIf="selectedRequestDetails">
+        <div class="modal-header">
+          <h5 class="modal-title">Request Details</h5>
+          <button type="button" class="btn-close" (click)="closeDetailsModal()" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-4">
+            <h6>Request Information</h6>
+            <table class="table table-sm table-bordered">
+              <tr>
+                <th style="width: 30%">Request ID</th>
+                <td>{{ selectedRequestDetails._id }}</td>
+              </tr>
+              <tr>
+                <th>Status</th>
+                <td>
+                  <span [class]="getStatusBadgeClass(selectedRequestDetails.status)" class="badge">
+                    {{ selectedRequestDetails.status | titlecase }}
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <th>Created At</th>
+                <td>{{ selectedRequestDetails.createdAt | date:'medium' }}</td>
+              </tr>
+              <tr>
+                <th>Last Updated</th>
+                <td>{{ selectedRequestDetails.updatedAt | date:'medium' }}</td>
+              </tr>
+            </table>
+          </div>
+  
+          <div class="mb-4">
+            <h6>User Information</h6>
+            <table class="table table-sm table-bordered">
+              <tr>
+                <th style="width: 30%">User ID</th>
+                <td>{{ selectedRequestDetails.user_id?._id || 'N/A' }}</td>
+              </tr>
+              <tr>
+                <th>Email</th>
+                <td>{{ selectedRequestDetails.user_id?.email || 'N/A' }}</td>
+              </tr>
+            </table>
+          </div>
+  
+          <div class="mb-4">
+            <h6>Request Content</h6>
+            <div class="border rounded p-3 bg-light">
+              <h5>{{ selectedRequestDetails.subject }}</h5>
+              <p class="mb-0">{{ selectedRequestDetails.message }}</p>
+            </div>
+          </div>
+  
+          <div class="mb-4" *ngIf="selectedRequestDetails.admin_response">
+            <h6>Admin Response</h6>
+            <div class="border rounded p-3 bg-light">
+              <p class="mb-2"><strong>Response:</strong></p>
+              <p class="mb-0">{{ selectedRequestDetails.admin_response }}</p>
+              <p class="text-muted small mt-2 mb-0">
+                <em>Responded by: {{ selectedRequestDetails.admin_id || 'Admin' }}</em>
+                <br>
+                <em>Last updated: {{ selectedRequestDetails.updatedAt | date:'medium' }}</em>
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button 
+            type="button" 
+            class="btn btn-outline-secondary" 
+            (click)="closeDetailsModal()"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Backdrop for modal -->
+  <div class="modal-backdrop fade" [class.show]="showResponseModal" 
+       [style.display]="showResponseModal ? 'block' : 'none'"></div>

@@ -1,0 +1,16 @@
+/* contact-us.css */
+.badge {
+    font-size: 0.8em;
+    padding: 0.35em 0.65em;
+  }
+  
+  .cursor-pointer {
+    cursor: pointer;
+  }
+  
+  .text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }

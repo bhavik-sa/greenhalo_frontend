@@ -1,0 +1,353 @@
+<!-- Search and Filter Section -->
+<div class="container-fluid py-4">
+  <!-- Header and Search Bar -->
+  <div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+      <h2 class="mb-0">CMS Pages</h2>
+    </div>
+    <div class="col-md-6 text-end">
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <i class="bi bi-plus-circle"></i> Create New Page
+      </button>
+    </div>
+    <!-- <div class="col-md-6">
+      <div class="input-group">
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="Search pages..." 
+          [(ngModel)]="searchQuery"
+          (keyup.enter)="onSearch()"
+        >
+        <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">
+          <i class="bi bi-search"></i> Search
+        </button>
+        <button class="btn btn-outline-secondary" type="button" (click)="resetFilters()">
+          <i class="bi bi-arrow-counterclockwise"></i>
+        </button>
+      </div>
+    </div> -->
+  </div>
+
+  <!-- Filters -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">Page Name</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [(ngModel)]="filters.page_name"
+            (keyup.enter)="applyFilters()"
+          >
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="filters.status" (change)="applyFilters()">
+            <option value="">All Status</option>
+            <option *ngFor="let status of statusOptions" [value]="status">
+              {{ status | titlecase }}
+            </option>
+          </select>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <button class="btn btn-primary me-2" (click)="applyFilters()">
+            <i class="bi bi-funnel"></i> Apply Filters
+          </button>
+          <button class="btn btn-outline-secondary" (click)="resetFilters()">
+            <i class="bi bi-x-circle"></i> Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Loading pages...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="error && !isLoading" class="alert alert-danger">
+    {{ error }}
+  </div>
+
+  <!-- CMS Pages Table -->
+  <div *ngIf="!isLoading && !error" class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Page Name</th>
+              <th>Status</th>
+              <th>Created At</th>
+              <th>Last Updated</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let page of cmsPages">
+              <td>
+                <div class="fw-medium">{{ page.page_name | titlecase }}</div>
+              </td>
+              <td>
+                <span [class]="getStatusBadgeClass(page.status)" class="badge">
+                  {{ page.status | titlecase }}
+                </span>
+              </td>
+              <td>{{ formatDate(page.createdAt) }}</td>
+              <td>{{ formatDate(page.updatedAt) }}</td>
+              <td class="text-end">
+                <div class="btn-group" role="group">
+                  <button 
+                    class="btn btn-sm btn-outline-primary me-1"
+                    (click)="viewPageDetails(page)"
+                    title="View"
+                  >
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <button 
+                    class="btn btn-sm btn-outline-secondary me-1"
+                    (click)="openEditModal(page)"
+                    title="Edit"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button 
+                    class="btn btn-sm btn-outline-danger"
+                    (click)="confirmDelete(page)"
+                    title="Delete"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="cmsPages.length === 0">
+              <td colspan="5" class="text-center py-4 text-muted">
+                No pages found. Try adjusting your search or filters.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="d-flex justify-content-between align-items-center p-3 border-top">
+        <div class="d-flex align-items-center">
+          <span class="me-2">Items per page:</span>
+          <select 
+            class="form-select form-select-sm" 
+            style="width: auto;"
+            [(ngModel)]="itemsPerPage"
+            (change)="onItemsPerPageChange()"
+          >
+            <option *ngFor="let size of pageSizes" [value]="size">{{ size }}</option>
+          </select>
+          <span class="ms-3 text-muted">
+            Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to 
+            <!-- {{ Math.ceil(currentPage * itemsPerPage / totalItems) }} of -->
+            {{ totalItems }} entries
+          </span>
+        </div>
+        
+        <nav *ngIf="totalPages > 1">
+          <ul class="pagination mb-0">
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <a class="page-link" href="javascript:void(0)" (click)="onPageChange(1)" aria-label="First">
+                <span aria-hidden="true">&laquo;&laquo;</span>
+              </a>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === 1">
+              <a class="page-link" href="javascript:void(0)" (click)="onPageChange(currentPage - 1)" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+              </a>
+            </li>
+            
+            <ng-container *ngFor="let page of getPaginationArray()">
+              <li class="page-item" [class.active]="page === currentPage">
+                <a class="page-link" href="javascript:void(0)" (click)="onPageChange(page)">{{ page }}</a>
+              </li>
+            </ng-container>
+            
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <a class="page-link" href="javascript:void(0)" (click)="onPageChange(currentPage + 1)" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+              </a>
+            </li>
+            <li class="page-item" [class.disabled]="currentPage === totalPages">
+              <a class="page-link" href="javascript:void(0)" (click)="onPageChange(totalPages)" aria-label="Last">
+                <span aria-hidden="true">&raquo;&raquo;</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View Page Modal -->
+<div class="modal fade" [class.show]="showViewModal" [style.display]="showViewModal ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ selectedPage?.page_name | titlecase }}</h5>
+        <button type="button" class="btn-close" (click)="closeViewModal()" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <h6>Page Details</h6>
+          <table class="table table-sm">
+            <tr>
+              <th style="width: 120px;">Status</th>
+              <td>
+                <span [class]="getStatusBadgeClass(selectedPage?.status || '')" class="badge">
+                  {{ selectedPage?.status | titlecase }}
+                </span>
+              </td>
+            </tr>
+            <tr>
+              <th>Created</th>
+              <td>{{ formatDate(selectedPage?.createdAt) }}</td>
+            </tr>
+            <tr>
+              <th>Last Updated</th>
+              <td>{{ formatDate(selectedPage?.updatedAt) }}</td>
+            </tr>
+          </table>
+        </div>
+        <div class="mb-3">
+          <h6>Content</h6>
+          <div class="border rounded p-3 bg-light" [innerHTML]="selectedPage?.content"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Page Modal -->
+<div class="modal fade" [class.show]="showEditModal" [style.display]="showEditModal ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit {{ selectedPage?.page_name | titlecase }}</h5>
+        <button type="button" class="btn-close" (click)="closeEditModal()" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="editForm.status">
+            <option *ngFor="let status of statusOptions" [value]="status">
+              {{ status | titlecase }}
+            </option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Content</label>
+          <textarea 
+            class="form-control" 
+            rows="10"
+            [(ngModel)]="editForm.content"
+            placeholder="Enter page content..."
+          ></textarea>
+          <div class="form-text">Use HTML for formatting</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeEditModal()" [disabled]="isLoading">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary" (click)="updatePage()" [disabled]="isLoading">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" [class.show]="showDeleteModal" [style.display]="showDeleteModal ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button type="button" class="btn-close" (click)="closeDeleteModal()" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete the page <strong>{{ selectedPage?.page_name }}</strong>? This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeDeleteModal()" [disabled]="isLoading">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-danger" (click)="deletePage()" [disabled]="isLoading">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+          Delete Page
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Page Modal -->
+<div class="modal fade" [class.show]="showCreateModal" [style.display]="showCreateModal ? 'block' : 'none'" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Create New Page</h5>
+        <button type="button" class="btn-close" (click)="closeCreateModal()" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Page Name</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [(ngModel)]="createForm.page_name"
+            placeholder="Enter page name"
+            required
+          >
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="createForm.status">
+            <option *ngFor="let status of statusOptions" [value]="status">
+              {{ status | titlecase }}
+            </option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Content</label>
+          <textarea 
+            class="form-control" 
+            rows="10"
+            [(ngModel)]="createForm.content"
+            placeholder="Enter page content..."
+            required
+          ></textarea>
+          <div class="form-text">Use HTML for formatting</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeCreateModal()" [disabled]="isLoading">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-primary" (click)="createPage()" [disabled]="isLoading">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-1" role="status"></span>
+          Create Page
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop for modals -->
+<div class="modal-backdrop fade" [class.show]="showEditModal || showViewModal || showDeleteModal || showCreateModal" 
+     [style.display]="(showEditModal || showViewModal || showDeleteModal || showCreateModal) ? 'block' : 'none'"></div>

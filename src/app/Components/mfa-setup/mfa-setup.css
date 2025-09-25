@@ -1,0 +1,15 @@
+.qr {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+}
+
+.card-title {
+  font-weight: 600;
+}
+
+@media (max-width: 576px) {
+  .card-body {
+    padding: 1rem !important;
+  }
+}
