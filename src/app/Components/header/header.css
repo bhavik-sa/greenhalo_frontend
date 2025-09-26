@@ -1,0 +1,115 @@
+/* Profile Picture Upload Styles */
+.avatar-upload-label {
+  position: relative;
+  display: inline-block;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 50%;
+}
+
+.avatar-upload-label:hover .avatar-upload-overlay {
+  opacity: 1;
+}
+
+.avatar-upload-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.avatar-upload-overlay i {
+  font-size: 1rem;
+}
+
+/* Avatar styles */
+.avatar-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Ensure the avatar image is properly contained */
+.avatar-sm img {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+/* Dropdown menu styles */
+.dropdown-menu {
+  min-width: 12rem;
+  border: none;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0;
+  margin-top: 0.5rem;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1.5rem;
+  color: #4a5568;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+  color: #1a202c;
+}
+
+.dropdown-item i {
+  margin-right: 0.5rem;
+  width: 1.25rem;
+  text-align: center;
+}
+
+/* Header styles */
+.navbar {
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 1030;
+}
+
+.nav-link {
+  padding: 0;
+}
+
+/* Toggle button styles */
+.btn-link {
+  color: #4a5568;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.btn-link:hover {
+  color: #2d3748;
+}
+
+
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+  .navbar {
+    padding: 0.5rem 1rem;
+  }
+  
+  .avatar-title {
+    width: 36px;
+    height: 36px;
+    font-size: 0.875rem;
+  }
+}

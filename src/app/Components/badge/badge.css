@@ -1,0 +1,293 @@
+/* Badge Details Modal Styles */
+.modal {
+  overflow-y: auto;
+  padding: 1rem;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+.modal-dialog {
+  margin: 1.75rem auto;
+  max-width: 1200px;
+  width: 95%;
+}
+
+.modal-content {
+  border: none;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+  color: white;
+}
+
+.modal-title {
+  font-weight: 600;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.modal-body {
+  overflow-y: auto;
+  padding: 0;
+  flex: 1;
+}
+
+/* Badge Avatar */
+.badge-avatar {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 4px solid #fff;
+  box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  background-color: #f8f9fc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-avatar img {
+  transition: transform 0.3s ease;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.badge-avatar:hover img {
+  transform: scale(1.05);
+}
+
+.status-indicator {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+/* Badge Description */
+.badge-description {
+  line-height: 1.6;
+  padding: 1.25rem;
+}
+
+.badge-description ::ng-deep p:last-child {
+  margin-bottom: 0;
+}
+
+/* Media Gallery */
+.media-gallery .card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  height: 100%;
+}
+
+.media-gallery .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Fix for modal backdrop */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1040;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Fix for body scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+  padding-right: 0 !important;
+}
+
+/* Smooth transitions */
+.modal,
+.modal-backdrop {
+  transition: opacity 0.3s ease;
+}
+
+/* Custom scrollbar for modal */
+.modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Hover effects */
+.hover-shadow {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.hover-shadow:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  transform: translateY(-2px);
+}
+
+/* Animation for modal */
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal.fade.show .modal-dialog {
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 991.98px) {
+  .modal-dialog {
+    max-width: 95%;
+  }
+  
+  .badge-avatar {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .modal-header {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1rem;
+  }
+  
+  .modal-title {
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+  }
+  
+  .modal-body {
+    padding: 1rem;
+  }
+  
+  .badge-avatar {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+/* HTML Content Preview (kept from original) */
+.html-preview {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  background-color: #f8f9fa;
+  margin-bottom: 1.5rem;
+}
+
+.html-preview img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.25rem;
+  margin: 0.5rem 0;
+}
+
+/* Card styles for media items */
+.media-card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.media-card .card-img-top {
+  height: 140px;
+  object-fit: cover;
+}
+
+.media-card .card-body {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.media-card .card-title {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.media-card .card-text {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+
+.media-card .card-footer {
+  background-color: transparent;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 0.75rem 1rem;
+  margin-top: auto;
+}
+
+/* Fix for modal transitions */
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out, opacity 0.3s ease;
+  transform: translate(0, -50px);
+  opacity: 0;
+}
+
+.modal.show .modal-dialog {
+  transform: translate(0, 0);
+  opacity: 1;
+}
+
+/* Fix for scrollbar jump */
+html {
+  overflow-y: scroll;
+  margin-right: 0 !important;
+}
+
+/* Fix for backdrop click */
+.modal-backdrop {
+  z-index: 1040;
+}
+
+/* Fix for modal stacking */
+.modal {
+  z-index: 1050;
+}
+
+/* Fix for body scroll when modal is open */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  padding-right: 0 !important;
+}

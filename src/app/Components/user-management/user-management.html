@@ -2,13 +2,63 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">User Management</h2>
-        <div class="d-flex align-items-center">
-            <div class="input-group" style="width: 300px;">
-                <span class="input-group-text bg-white border-end-0">
-                    <i class="bi bi-search"></i>
-                </span>
-                <input type="text" class="form-control border-start-0" [(ngModel)]="searchQuery"
-                    placeholder="Search users...">
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-primary" (click)="toggleFilters()">
+                <i class="bi bi-funnel me-1"></i> {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4" *ngIf="showFilters">
+        <div class="card-body" [formGroup]="filterForm">
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            formControlName="search"
+                            (keyup.enter)="fetchUsers(true)" 
+                            placeholder="Search by name, email...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" formControlName="status">
+                        <option value="">All Statuses</option>
+                        <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Subscription</label>
+                    <select class="form-select" formControlName="subscription">
+                        <option value="">All Subscriptions</option>
+                        <option *ngFor="let sub of subscriptionOptions" [value]="sub">{{ sub }}</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Date Range</label>
+                    <div class="row g-2">
+                        <div class="col">
+                            <input type="date" class="form-control" formControlName="startDate" placeholder="Start date">
+                        </div>
+                        <div class="col">
+                            <input type="date" class="form-control" formControlName="endDate" placeholder="End date">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12 d-flex justify-content-end gap-2">
+                    <button class="btn btn-outline-secondary" (click)="resetFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filters
+                    </button>
+                    <button class="btn btn-primary" (click)="fetchUsers(true)">
+                        <i class="bi bi-funnel me-1"></i> Apply Filters
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -64,7 +114,7 @@
                                 </td>
                                 <td>{{ formatDate(user.createdAt) }}</td>
                                 <td class="text-end">
-                                    <button class="btn btn-sm btn-light me-2" (click)="viewUserDetails(user._id)"
+                                    <button class="btn btn-sm btn-light me-2" (click)="viewUserDetails(user)"
                                         title="View Details">
                                         <i class="bi bi-eye"></i>
                                     </button>
@@ -96,28 +146,48 @@
             </div>
 
             <!-- Pagination -->
-            <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top">
-                <div class="text-muted small">
-                    Showing <span class="fw-semibold">{{ (currentPage - 1) * itemsPerPage + 1 }}-{{ currentPage *
-                        itemsPerPage }}</span> of
-                    <span class="fw-semibold">{{ statistics.totalUsers }}</span> users
+            <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                <div class="text-muted">
+                    Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to 
+                    {{ (currentPage * itemsPerPage) > statistics.totalUsers ? statistics.totalUsers : (currentPage * itemsPerPage) }} of {{ statistics.totalUsers }} entries
                 </div>
-                <nav>
-                    <ul class="pagination pagination-sm mb-0">
+                
+                <nav *ngIf="getTotalPages() > 1">
+                    <ul class="pagination mb-0">
                         <li class="page-item" [class.disabled]="currentPage === 1">
-                            <a class="page-link" href="javascript:void(0)"
-                                (click)="onPageChange(currentPage - 1)">Previous</a>
+                            <a class="page-link" href="javascript:;" (click)="onPageChange(1)" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
                         </li>
-                        <li class="page-item" *ngFor="let page of getPageNumbers()"
-                            [class.active]="page === currentPage">
-                            <a class="page-link" href="javascript:void(0)" (click)="onPageChange(page)">{{ page }}</a>
+                        <li class="page-item" [class.disabled]="currentPage === 1">
+                            <a class="page-link" href="javascript:;" (click)="onPageChange(currentPage - 1)" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        
+                        <li *ngFor="let page of getPageNumbers()" class="page-item" [class.active]="page === currentPage">
+                            <a class="page-link" href="javascript:;" (click)="onPageChange(page)">{{ page }}</a>
+                        </li>
+                        
+                        <li class="page-item" [class.disabled]="currentPage === getTotalPages()">
+                            <a class="page-link" href="javascript:;" (click)="onPageChange(currentPage + 1)" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
                         </li>
                         <li class="page-item" [class.disabled]="currentPage === getTotalPages()">
-                            <a class="page-link" href="javascript:void(0)"
-                                (click)="onPageChange(currentPage + 1)">Next</a>
+                            <a class="page-link" href="javascript:;" (click)="onPageChange(getTotalPages())" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
                         </li>
                     </ul>
                 </nav>
+                
+                <div class="d-flex align-items-center">
+                    <span class="me-2">Items per page:</span>
+                    <select class="form-select form-select-sm" style="width: auto;" [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
+                        <option *ngFor="let size of [5, 10, 20, 50]" [value]="size">{{ size }}</option>
+                    </select>
+                </div>
             </div>
         </div>
     </div>
@@ -185,13 +255,18 @@
                                     {{ selectedUser.mfa?.enabled ? 'Enabled' : 'Disabled' }}
                                 </span>
                             </div>
-                            <div class="col-12" *ngIf="selectedUser.badges?.length">
-                                <h6 class="text-muted mb-2">Badges</h6>
-                                <div>
-                                    <span *ngFor="let badge of selectedUser.badges" class="badge bg-info me-1 mb-1">
-                                        {{ badge }}
-                                    </span>
-                                </div>
+                            <div class="mb-3">
+                                <label for="badges" class="form-label">Assigned Badges</label>
+                                <select 
+                                    class="form-select" 
+                                    id="badges" 
+                                    [(ngModel)]="removeBadgeId"
+                                    [ngModelOptions]="{standalone: true}">
+                                    <option [ngValue]="null">--  badge list --</option>
+                                    <option *ngFor="let badge of assignedBadges" [ngValue]="badge._id">
+                                        {{ badge.title }}
+                                    </option>
+                                </select>
                             </div>
                             <div class="col-12" *ngIf="selectedUser.refered_by?.length">
                                 <h6 class="text-muted mb-2">Referred By</h6>
@@ -212,6 +287,8 @@
         </div>
     </div>
 </div>
+
+
 
 
 <!-- Edit User Modal -->
@@ -239,6 +316,34 @@
                             <option value="FREE">Free</option>
                         </select>
                     </div>
+                    <div class="mb-3">
+                        <label for="badges" class="form-label">Unassigned Badges</label>
+                        <select 
+                            class="form-select" 
+                            id="badges" 
+                            [(ngModel)]="selectedBadgeId"
+                            [ngModelOptions]="{standalone: true}">
+                            <option [ngValue]="null">-- Select a badge --</option>
+                            <option *ngFor="let badge of availableBadges" [ngValue]="badge._id">
+                                {{ badge.title }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="badges" class="form-label">Assigned Badges</label>
+                        <select 
+                            class="form-select" 
+                            id="badges" 
+                            [(ngModel)]="removeBadgeId"
+                            [ngModelOptions]="{standalone: true}">
+                            <option [ngValue]="null">-- Select a badge --</option>
+                            <option *ngFor="let badge of assignedBadges" [ngValue]="badge._id">
+                                {{ badge.title }}
+                            </option>
+                        </select>
+                    </div>
+                   
                     <button type="submit" class="btn btn-primary">Update</button>
                 </form>
             </div>

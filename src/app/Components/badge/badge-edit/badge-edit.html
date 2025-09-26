@@ -1,0 +1,93 @@
+<div class="container py-4">
+  <div class="card shadow-sm">
+    <div class="card-header bg-white">
+      <h3 class="mb-0">{{ badgeId ? 'Edit' : 'Create' }} Badge</h3>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="badgeForm" (ngSubmit)="onSubmit()">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label for="title" class="form-label">Title *</label>
+              <input type="text" class="form-control" id="title" formControlName="title"
+                [ngClass]="{'is-invalid': badgeForm.get('title')?.invalid && badgeForm.get('title')?.touched}">
+              <div class="invalid-feedback" *ngIf="badgeForm.get('title')?.errors?.['required']">
+                Title is required
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="type" class="form-label">Type</label>
+              <select class="form-select" id="type" formControlName="type">
+                <option value="">Select a type</option>
+                <option *ngFor="let type of mediaTypes" [value]="type">{{ type }}</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Status</label>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="status" formControlName="status">
+                <label class="form-check-label" for="status">Active</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Icon</label>
+              <div class="d-flex align-items-center">
+                <!-- <div class="me-3" *ngIf="previewIconUrl">
+                  <img [src]="previewIconUrl" alt="Icon preview" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">
+                </div> -->
+                <div class="flex-grow-1">
+                  <input type="file" class="form-control" (change)="onIconFileChange($event)" accept="image/*">
+                  <div class="form-text">Square image recommended (e.g., 512x512px)</div>
+                  <!-- <button type="button" class="btn btn-sm btn-outline-danger mt-2" (click)="removeIcon()" *ngIf="previewIconUrl">
+                    Remove Icon
+                  </button> -->
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Media File (Optional)</label>
+              <div class="d-flex align-items-center">
+                <!-- <div class="me-3" *ngIf="previewMediaUrl">
+                  <img [src]="previewMediaUrl" alt="Media preview" class="img-thumbnail" style="max-width: 100px; max-height: 100px;">
+                </div> -->
+                <div class="flex-grow-1">
+                  <input type="file" class="form-control" (change)="onMediaFileChange($event)">
+                  <div class="form-text">Upload a video or image file</div>
+                  <!-- <button type="button" class="btn btn-sm btn-outline-danger mt-2" (click)="removeMedia()" *ngIf="previewMediaUrl">
+                    Remove Media
+                  </button> -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="html_content" class="form-label">HTML Content *</label>
+          <textarea class="form-control" id="html_content" formControlName="html_content" rows="6"
+            [ngClass]="{'is-invalid': badgeForm.get('html_content')?.invalid && badgeForm.get('html_content')?.touched}"></textarea>
+          <div class="invalid-feedback" *ngIf="badgeForm.get('html_content')?.errors?.['required']">
+            HTML content is required
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+          <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="isLoading">
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="badgeForm.invalid || isLoading">
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            {{ badgeId ? 'Update' : 'Create' }} Badge
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

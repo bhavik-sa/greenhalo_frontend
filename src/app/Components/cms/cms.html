@@ -1,62 +1,69 @@
 <!-- Search and Filter Section -->
 <div class="container-fluid py-4">
-  <!-- Header and Search Bar -->
-  <div class="row mb-4 align-items-center">
-    <div class="col-md-6">
-      <h2 class="mb-0">CMS Pages</h2>
-    </div>
-    <div class="col-md-6 text-end">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">CMS Pages</h2>
+    <div class="d-flex align-items-center gap-2">
+      <button class="btn btn-outline-primary" (click)="toggleFilters()">
+        <i class="bi bi-funnel me-1"></i> {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+      </button>
       <button class="btn btn-primary" (click)="openCreateModal()">
-        <i class="bi bi-plus-circle"></i> Create New Page
+        <i class="bi bi-plus-circle me-1"></i> Create New Page
       </button>
     </div>
-    <!-- <div class="col-md-6">
-      <div class="input-group">
-        <input 
-          type="text" 
-          class="form-control" 
-          placeholder="Search pages..." 
-          [(ngModel)]="searchQuery"
-          (keyup.enter)="onSearch()"
-        >
-        <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">
-          <i class="bi bi-search"></i> Search
-        </button>
-        <button class="btn btn-outline-secondary" type="button" (click)="resetFilters()">
-          <i class="bi bi-arrow-counterclockwise"></i>
-        </button>
-      </div>
-    </div> -->
   </div>
 
   <!-- Filters -->
-  <div class="card mb-4">
-    <div class="card-body">
+  <div class="card mb-4" *ngIf="showFilters">
+    <div class="card-body" [formGroup]="filterForm">
       <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label">Page Name</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            [(ngModel)]="filters.page_name"
-            (keyup.enter)="applyFilters()"
-          >
+        <div class="col-md-12">
+          <div class="input-group mb-3">
+            <span class="input-group-text">
+              <i class="bi bi-search"></i>
+            </span>
+            <input 
+              type="text" 
+              class="form-control" 
+              formControlName="search"
+              (keyup.enter)="applyFilters()"
+              placeholder="Search pages...">
+          </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <label class="form-label">Status</label>
-          <select class="form-select" [(ngModel)]="filters.status" (change)="applyFilters()">
-            <option value="">All Status</option>
+          <select class="form-select" formControlName="status">
+            <option value="">All Statuses</option>
             <option *ngFor="let status of statusOptions" [value]="status">
               {{ status | titlecase }}
             </option>
           </select>
         </div>
-        <div class="col-md-4 d-flex align-items-end">
-          <button class="btn btn-primary me-2" (click)="applyFilters()">
-            <i class="bi bi-funnel"></i> Apply Filters
+        <div class="col-md-6">
+          <label class="form-label">Date Range</label>
+          <div class="row g-2">
+            <div class="col">
+              <input 
+                type="date" 
+                class="form-control" 
+                formControlName="startDate" 
+                placeholder="Start date">
+            </div>
+            <div class="col">
+              <input 
+                type="date" 
+                class="form-control" 
+                formControlName="endDate" 
+                placeholder="End date">
+            </div>
+          </div>
+        </div>
+        <div class="col-md-12 d-flex justify-content-end gap-2">
+          <button class="btn btn-outline-secondary" (click)="resetFilters()" [disabled]="!filterForm.dirty">
+            <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filters
           </button>
-          <button class="btn btn-outline-secondary" (click)="resetFilters()">
-            <i class="bi bi-x-circle"></i> Reset
+          <button class="btn btn-primary" (click)="applyFilters()">
+            <i class="bi bi-funnel me-1"></i> Apply Filters
           </button>
         </div>
       </div>
@@ -138,55 +145,48 @@
       </div>
 
       <!-- Pagination -->
-      <div class="d-flex justify-content-between align-items-center p-3 border-top">
-        <div class="d-flex align-items-center">
-          <span class="me-2">Items per page:</span>
-          <select 
-            class="form-select form-select-sm" 
-            style="width: auto;"
-            [(ngModel)]="itemsPerPage"
-            (change)="onItemsPerPageChange()"
-          >
-            <option *ngFor="let size of pageSizes" [value]="size">{{ size }}</option>
-          </select>
-          <span class="ms-3 text-muted">
-            Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to 
-            <!-- {{ Math.ceil(currentPage * itemsPerPage / totalItems) }} of -->
-            {{ totalItems }} entries
-          </span>
+      <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="text-muted">
+          Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to 
+          {{ (currentPage * itemsPerPage) > totalItems ? totalItems : (currentPage * itemsPerPage) }} of {{ totalItems }} entries
         </div>
         
         <nav *ngIf="totalPages > 1">
           <ul class="pagination mb-0">
             <li class="page-item" [class.disabled]="currentPage === 1">
-              <a class="page-link" href="javascript:void(0)" (click)="onPageChange(1)" aria-label="First">
+              <a class="page-link" href="javascript:;" (click)="onPageChange(1)" aria-label="First">
                 <span aria-hidden="true">&laquo;&laquo;</span>
               </a>
             </li>
             <li class="page-item" [class.disabled]="currentPage === 1">
-              <a class="page-link" href="javascript:void(0)" (click)="onPageChange(currentPage - 1)" aria-label="Previous">
+              <a class="page-link" href="javascript:;" (click)="onPageChange(currentPage - 1)" aria-label="Previous">
                 <span aria-hidden="true">&laquo;</span>
               </a>
             </li>
             
-            <ng-container *ngFor="let page of getPaginationArray()">
-              <li class="page-item" [class.active]="page === currentPage">
-                <a class="page-link" href="javascript:void(0)" (click)="onPageChange(page)">{{ page }}</a>
-              </li>
-            </ng-container>
+            <li *ngFor="let page of getPageNumbers()" class="page-item" [class.active]="page === currentPage">
+              <a class="page-link" href="javascript:;" (click)="onPageChange(page)">{{ page }}</a>
+            </li>
             
             <li class="page-item" [class.disabled]="currentPage === totalPages">
-              <a class="page-link" href="javascript:void(0)" (click)="onPageChange(currentPage + 1)" aria-label="Next">
+              <a class="page-link" href="javascript:;" (click)="onPageChange(currentPage + 1)" aria-label="Next">
                 <span aria-hidden="true">&raquo;</span>
               </a>
             </li>
             <li class="page-item" [class.disabled]="currentPage === totalPages">
-              <a class="page-link" href="javascript:void(0)" (click)="onPageChange(totalPages)" aria-label="Last">
+              <a class="page-link" href="javascript:;" (click)="onPageChange(totalPages)" aria-label="Last">
                 <span aria-hidden="true">&raquo;&raquo;</span>
               </a>
             </li>
           </ul>
         </nav>
+        
+        <div class="d-flex align-items-center">
+          <span class="me-2">Items per page:</span>
+          <select class="form-select form-select-sm" style="width: auto;" [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
+            <option *ngFor="let size of pageSizes" [value]="size">{{ size }}</option>
+          </select>
+        </div>
       </div>
     </div>
   </div>

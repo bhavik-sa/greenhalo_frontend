@@ -1,10 +1,11 @@
 // contact-us.ts
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { ToastService } from 'src/app/shared/toast.service';
+import { RouterModule } from '@angular/router';
 
 interface User {
   _id: string;
@@ -41,13 +42,20 @@ interface ContactListResponse {
 @Component({
   selector: 'app-contact-us',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    DatePipe, 
+    ReactiveFormsModule,
+    RouterModule
+  ],
   templateUrl: './contact-us.html',
   styleUrls: ['./contact-us.css']
 })
 export class ContactUsComponent implements OnInit {
   private http = inject(HttpClient);
   private toast = inject(ToastService);
+  private fb = inject(FormBuilder);
 
   contactRequests: ContactRequest[] = [];
   selectedRequest: ContactRequest | null = null;
@@ -60,17 +68,59 @@ export class ContactUsComponent implements OnInit {
   totalPages = 1;
   showDetailsModal = false;
   selectedRequestDetails: any = null;
+  showFilters = false;
+  filterForm!: FormGroup;
 
   // Response form
   responseForm = {
     response: '',
-    status: 'RESOLVED' as 'OPEN'  | 'RESOLVED'
+    status: 'RESOLVED' as 'OPEN' | 'RESOLVED'
   };
 
   readonly statusOptions = ['OPEN', 'RESOLVED'];
+  readonly pageSizes = [5, 10, 20, 50];
+  
+  // Date picker config
+  datePickerConfig = {
+    dateInputFormat: 'YYYY-MM-DD',
+    containerClass: 'theme-dark-blue',
+    maxDate: new Date()
+  };
 
   ngOnInit(): void {
+    this.initFilterForm();
     this.fetchContactRequests();
+  }
+
+  private initFilterForm(): void {
+    this.filterForm = this.fb.group({
+      search: [''],
+      status: [''],
+      startDate: [''],
+      endDate: ['']
+    });
+  }
+
+  // Toggle filter section visibility
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+  }
+
+  // Apply filters and refresh the data
+  applyFilters(): void {
+    this.currentPage = 1;
+    this.fetchContactRequests();
+  }
+
+  // Reset all filters to their default values
+  resetFilters(): void {
+    this.filterForm.patchValue({
+      search: '',
+      status: '',
+      startDate: '',
+      endDate: ''
+    });
+    this.applyFilters();
   }
 
   fetchContactRequests(): void {
@@ -87,10 +137,27 @@ export class ContactUsComponent implements OnInit {
       'Content-Type': 'application/json'
     });
 
-    const params = {
-      page: this.currentPage.toString(),
-      limit: this.itemsPerPage.toString()
-    };
+    const filterValues = this.filterForm.value;
+    let params = new HttpParams()
+      .set('page', this.currentPage.toString())
+      .set('limit', this.itemsPerPage.toString());
+
+    // Apply filters
+    if (filterValues.search) {
+      params = params.set('search', filterValues.search.trim());
+    }
+    if (filterValues.status) {
+      params = params.set('status', filterValues.status);
+    }
+    if (filterValues.startDate) {
+      params = params.set('startDate', new Date(filterValues.startDate).toISOString());
+    }
+    if (filterValues.endDate) {
+      // Set end of day for end date
+      const endDate = new Date(filterValues.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      params = params.set('endDate', endDate.toISOString());
+    }
 
     this.http.get<ContactListResponse>('http://localhost:8000/admin/contact-request', { headers, params })
       .pipe(finalize(() => this.isLoading = false))
@@ -98,6 +165,7 @@ export class ContactUsComponent implements OnInit {
         next: (response) => {
           this.contactRequests = response.data.results;
           this.totalItems = response.data.total;
+          this.totalPages = response.data.pages;
           this.totalPages = response.data.pages;
         },
         error: (err) => {
@@ -213,6 +281,12 @@ export class ContactUsComponent implements OnInit {
       this.fetchContactRequests();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  }
+
+  // Handle items per page change
+  onItemsPerPageChange(): void {
+    this.currentPage = 1;
+    this.fetchContactRequests();
   }
 
   getPaginationArray(): number[] {

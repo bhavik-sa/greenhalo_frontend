@@ -1,9 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ToastService } from 'src/app/shared/toast.service';
-import { FormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { finalize } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
@@ -37,7 +37,12 @@ interface CmsSingleResponse {
 @Component({
   selector: 'app-cms',
   standalone: true,
-  imports: [CommonModule, DatePipe, FormsModule],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    ReactiveFormsModule, 
+    RouterModule
+  ],
   templateUrl: './cms.html',
   styleUrls: ['./cms.css']
 })
@@ -46,8 +51,19 @@ export class CmsComponent implements OnInit {
   private toast = inject(ToastService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private fb = inject(FormBuilder);
 
   cmsPages: CmsPage[] = [];
+  showFilters = false;
+  filterForm!: FormGroup;  // Add definite assignment assertion
+  
+  // Status options for the filter dropdown
+  filters = {
+    search: '',
+    status: '',
+    startDate: '',
+    endDate: ''
+  };
   selectedPage: CmsPage | null = null;
   showEditModal = false;
   showViewModal = false;
@@ -62,15 +78,15 @@ export class CmsComponent implements OnInit {
   totalPages = 1;
   pageSizes = [5, 10, 20, 50];
   pageToDelete: string | null = null;
-  
-  // Search and filter
-  filters = {
-    page_name: '',
-    content: '',
-    status: ''
+  readonly statusOptions = ['DRAFT', 'PUBLISHED', 'ARCHIVED'];
+
+  // Date picker config
+  datePickerConfig = {
+    dateInputFormat: 'YYYY-MM-DD',
+    containerClass: 'theme-dark-blue',
+    maxDate: new Date()
   };
 
-  // Forms
   editForm = {
     content: '',
     status: 'DRAFT' as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
@@ -82,15 +98,17 @@ export class CmsComponent implements OnInit {
     status: 'DRAFT' as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
   };
 
-  readonly statusOptions = ['DRAFT', 'PUBLISHED', 'ARCHIVED'];
-
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-      if (params['pageId']) {
-        this.fetchCmsPageById(params['pageId']);
-      } else {
-        this.fetchCmsPages();
-      }
+    this.initFilterForm();
+    this.fetchCmsPages();
+  }
+
+  private initFilterForm(): void {
+    this.filterForm = this.fb.group({
+      search: [this.filters.search],
+      status: [this.filters.status],
+      startDate: [this.filters.startDate],
+      endDate: [this.filters.endDate]
     });
   }
 
@@ -108,19 +126,35 @@ export class CmsComponent implements OnInit {
       'Content-Type': 'application/json'
     });
 
+    const filterValues = this.filterForm.value;
+    
+    // Update filters object
+    this.filters = {
+      search: filterValues.search || '',
+      status: filterValues.status || '',
+      startDate: filterValues.startDate || '',
+      endDate: filterValues.endDate || ''
+    };
+
     let params = new HttpParams()
       .set('page', this.currentPage.toString())
       .set('limit', this.itemsPerPage.toString());
 
-    // Add search and filter params
-    if (this.filters.page_name) {
-      params = params.set('page_name', this.filters.page_name);
-    }
-    if (this.filters.content) {
-      params = params.set('content', this.filters.content);
+    // Apply filters
+    if (this.filters.search) {
+      params = params.set('search', this.filters.search.trim());
     }
     if (this.filters.status) {
       params = params.set('status', this.filters.status);
+    }
+    if (this.filters.startDate) {
+      params = params.set('startDate', new Date(this.filters.startDate).toISOString());
+    }
+    if (this.filters.endDate) {
+      // Set end of day for end date
+      const endDate = new Date(this.filters.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      params = params.set('endDate', endDate.toISOString());
     }
 
     this.http.get<CmsListResponse>('http://localhost:8000/admin/cms-page', { headers, params })
@@ -178,7 +212,7 @@ export class CmsComponent implements OnInit {
   }
 
   viewPageDetails(page: CmsPage): void {
-    this.router.navigate(['/cms'], { queryParams: { pageId: page._id } });
+    this.fetchCmsPageById(page._id);
   }
 
   updatePage(): void {
@@ -257,31 +291,54 @@ export class CmsComponent implements OnInit {
     });
   }
 
-  applyFilters(): void {
-    this.currentPage = 1; // Reset to first page when filters change
-    this.fetchCmsPages();
+  // Toggle filter section visibility
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
   }
 
-  onSearch(): void {
+  // Apply filters and refresh the data
+  applyFilters(): void {
     this.currentPage = 1;
     this.fetchCmsPages();
   }
 
+  // Reset all filters to their default values
+  resetFilters(): void {
+    this.filters = {
+      search: '',
+      status: '',
+      startDate: '',
+      endDate: ''
+    };
+    this.initFilterForm();
+    this.applyFilters();
+  }
+
+  // Generate page numbers for pagination
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    const endPage = Math.min(startPage + maxVisiblePages - 1, this.totalPages);
+    
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+    
+    return pages;
+  }
+  
+  // Handle items per page change
   onItemsPerPageChange(): void {
     this.currentPage = 1;
     this.fetchCmsPages();
   }
-
-  resetFilters(): void {
-    this.filters = {
-      page_name: '',
-      content: '',
-      status: ''
-    };
-    this.searchQuery = '';
-    this.applyFilters();
-  }
-
+  
+  // Handle page change
   onPageChange(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
@@ -291,6 +348,7 @@ export class CmsComponent implements OnInit {
     }
   }
 
+  // Get pagination array for display
   getPaginationArray(): number[] {
     const pages: number[] = [];
     const maxVisiblePages = 5;

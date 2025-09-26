@@ -42,6 +42,31 @@ export interface ResetPasswordResponse {
   success: boolean;
 }
 
+export interface ProfileResponse {
+  id: string;
+  name: string;
+  email: string;
+  // Add other profile fields as needed
+}
+
+export interface UpdateProfileRequest {
+  name: string;
+  email: string;
+  profile_url?: string;
+  // Add other updateable fields
+}
+
+export interface ChangePasswordRequest {
+  current_password: string;
+  new_password: string;
+}
+
+export interface ApiResponse {
+  message: string;
+  success: boolean;
+  data?: any;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -274,6 +299,61 @@ export class AuthService {
       data,
       {
         headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        withCredentials: true
+      }
+    );
+  }
+
+  /**
+   * Get user profile
+   */
+  getProfile(): Observable<ProfileResponse> {
+    return this.http.get<ProfileResponse>(`${this.apiUrl}/auth/profile`, {
+      headers: {
+        'Authorization': `Bearer ${this.getToken()}`,
+        'Accept': 'application/json'
+      },
+      withCredentials: true
+    });
+  }
+
+  /**
+   * Update user profile
+   * @param profileData Profile data to update
+   */
+  updateProfile(profileData: UpdateProfileRequest): Observable<ApiResponse> {
+    return this.http.put<ApiResponse>(
+      `${this.apiUrl}/auth/profile`,
+      profileData,
+      {
+        headers: {
+          'Authorization': `Bearer ${this.getToken()}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        withCredentials: true
+      }
+    );
+  }
+
+  /**
+   * Change user password
+   * @param currentPassword Current password
+   * @param newPassword New password
+   */
+  changePassword(currentPassword: string, newPassword: string): Observable<ApiResponse> {
+    return this.http.post<ApiResponse>(
+      `${this.apiUrl}/auth/change-password`,
+      {
+        current_password: currentPassword,
+        new_password: newPassword
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${this.getToken()}`,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },

@@ -11,6 +11,10 @@ import { ResetPassword } from './Components/reset-password/reset-password';
 import { UserManagementComponent } from './Components/user-management/user-management';
 import { CmsComponent } from './Components/cms/cms';
 import { ContactUsComponent } from './Components/contact-us/contact-us';
+import { BadgeEditComponent } from './Components/badge/badge-edit/badge-edit';
+import { BadgeManagementComponent } from './Components/badge/badge';
+import { AuditHistoryComponent } from './Components/audit-history/audit-history';
+import { ProfileComponent } from './Components/profile/profile';
 export const routes: Routes = [
     {
         path: '',
@@ -66,6 +70,32 @@ export const routes: Routes = [
                 component: ContactUsComponent,
                 canActivate: [authGuard],
                 title: 'Contact Us'
+            },
+
+            {
+                path: 'badge',
+                component: BadgeManagementComponent,
+                canActivate: [authGuard],
+                title: 'Badge Management'
+            },
+            {
+                path: 'badge/:id/edit',
+                component: BadgeEditComponent,
+                canActivate: [authGuard],
+                title: 'Edit Badge'
+            },
+            {
+                path: 'audit-history',
+                component: AuditHistoryComponent,
+                canActivate: [authGuard],
+                title: 'Audit History'
+            },
+            {
+                path: 'profile',
+                component: ProfileComponent,
+                canActivate: [authGuard],
+                title: 'Profile',
+                data: { activeTab: 'profile' }
             }
         ],
     },

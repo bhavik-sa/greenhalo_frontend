@@ -1,0 +1,287 @@
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Audit History</h2>
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-outline-primary" (click)="exportToCsv()" title="Export to CSV">
+                <i class="bi bi-download me-1"></i> Export
+            </button>
+            <button class="btn btn-outline-secondary" (click)="toggleFilters()">
+                <i class="bi bi-funnel me-1"></i> {{ showFilters ? 'Hide Filters' : 'Show Filters' }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="card mb-4" *ngIf="showFilters">
+        <div class="card-body" [formGroup]="filterForm">
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input 
+                            type="text" 
+                            class="form-control" 
+                            formControlName="search"
+                            (keyup.enter)="fetchAuditLogs(true)" 
+                            placeholder="Search by user email or action...">
+                    </div>
+                </div>
+                <!-- <div class="col-md-3">
+                    <label class="form-label">Action Type</label>
+                    <select class="form-select" formControlName="action">
+                        <option value="">All Actions</option>
+                        <option *ngFor="let action of actionOptions" [value]="action">{{ action }}</option>
+                    </select>
+                </div> -->
+                <div class="col-md-6">
+                    <label class="form-label">Date Range</label>
+                    <div class="row g-2">
+                        <div class="col">
+                            <input type="date" class="form-control" formControlName="startDate" placeholder="Start date">
+                        </div>
+                        <div class="col">
+                            <input type="date" class="form-control" formControlName="endDate" placeholder="End date">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-12 d-flex justify-content-end gap-2">
+                    <button class="btn btn-outline-secondary" (click)="resetFilters()">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filters
+                    </button>
+                    <button class="btn btn-primary" (click)="fetchAuditLogs(true)">
+                        <i class="bi bi-funnel me-1"></i> Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Alert -->
+    <div *ngIf="error" class="alert alert-danger" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ error }}
+    </div>
+
+    <!-- Audit Logs Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Action</th>
+                            <th>User</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <ng-container *ngIf="!isLoading; else loadingState">
+                            <tr *ngFor="let log of auditLogs" class="align-middle" (click)="viewLogDetails(log)" style="cursor: pointer;">
+                                <td>
+                                    <span class="badge" [ngClass]="getActionBadgeClass(log.action)">
+                                        {{ log.action }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <!-- <div class="avatar-sm me-3">
+                                            <div class="avatar-title bg-light text-primary rounded">
+                                                {{ log.actor_id && log.actor_id.username ? log.actor_id.username.charAt(0).toUpperCase() : '?' }}
+                                            </div>
+                                        </div> -->
+                                        <div>
+                                            <h6 class="mb-0">{{ log.actor_id && log.actor_id.username ? log.actor_id.username : 'System' }}</h6>
+                                            <small class="text-muted" *ngIf="log.actor_id && log.actor_id._id">ID: {{ log.actor_id._id | slice:0:8 }}...</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ log.createdAt }}</td>
+                            </tr>
+                            <tr *ngIf="auditLogs.length === 0">
+                                <td colspan="4" class="text-center py-4">
+                                    <div class="text-muted">No audit logs found</div>
+                                </td>
+                            </tr>
+                        </ng-container>
+
+                        <ng-template #loadingState>
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2 mb-0">Loading audit logs...</p>
+                                </td>
+                            </tr>
+                        </ng-template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="d-flex justify-content-between align-items-center p-3 border-top">
+                <div class="text-muted">
+                    Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to 
+                    {{ (currentPage * itemsPerPage) > totalItems ? totalItems : (currentPage * itemsPerPage) }} of {{ totalItems }} entries
+                </div>
+                
+                <nav *ngIf="getTotalPages() > 1">
+                    <ul class="pagination mb-0">
+                        <li class="page-item" [class.disabled]="currentPage === 1">
+                            <a class="page-link" href="javascript:;" (click)="onPageChange(1)" aria-label="First">
+                                <span aria-hidden="true">&laquo;&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item" [class.disabled]="currentPage === 1">
+                            <a class="page-link" href="javascript:;" (click)="onPageChange(currentPage - 1)" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        
+                        <li *ngFor="let page of getPageNumbers()" class="page-item" [class.active]="page === currentPage">
+                            <a class="page-link" href="javascript:;" (click)="onPageChange(page)">{{ page }}</a>
+                        </li>
+                        
+                        <li class="page-item" [class.disabled]="currentPage === getTotalPages()">
+                            <a class="page-link" href="javascript:;" (click)="onPageChange(currentPage + 1)" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item" [class.disabled]="currentPage === getTotalPages()">
+                            <a class="page-link" href="javascript:;" (click)="onPageChange(getTotalPages())" aria-label="Last">
+                                <span aria-hidden="true">&raquo;&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                
+                <div class="d-flex align-items-center">
+                    <span class="me-2">Items per page:</span>
+                    <select class="form-select form-select-sm" style="width: auto;" [(ngModel)]="itemsPerPage" (change)="onItemsPerPageChange()">
+                        <option *ngFor="let size of [5, 10, 20, 50]" [value]="size">{{ size }}</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="auditDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Audit Log Details</h5>
+                <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div *ngIf="selectedLog" class="row">
+                    <div class="col-12 mb-4">
+                        <h5 class="border-bottom pb-2 mb-3">Log Information</h5>
+                    </div>
+                    
+                    <!-- Basic Info -->
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted small mb-1">Action</h6>
+                        <div class="d-flex align-items-center">
+                            <span class="badge me-2" [ngClass]="getActionBadgeClass(selectedLog.action)">
+                                {{ selectedLog.action }}
+                            </span>
+                            <span class="text-muted small">{{ formatActionText(selectedLog.action) }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted small mb-1">Log ID</h6>
+                        <div class="text-truncate" [title]="selectedLog._id">
+                            {{ selectedLog._id }}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted small mb-1">Date & Time</h6>
+                        <div>{{ selectedLog.createdAt | date:'medium' }}</div>
+                        <small class="text-muted">{{ selectedLog.createdAt | date:'shortTime' }} (local time)</small>
+                    </div>
+                    
+                    <!-- User Information -->
+                    <div class="col-12 mt-4 mb-3">
+                        <h5 class="border-bottom pb-2 mb-3">User Information</h5>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted small mb-1">Username</h6>
+                        <div>{{ selectedLog.actor_id && selectedLog.actor_id.username ? selectedLog.actor_id.username : 'System' }}</div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted small mb-1">Email</h6>
+                        <div class="text-truncate" [title]="selectedLog.actor_id && selectedLog.actor_id.email ? selectedLog.actor_id.email : ''">
+                            {{ selectedLog.actor_id && selectedLog.actor_id.email ? selectedLog.actor_id.email : 'N/A' }}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3" *ngIf="selectedLog.actor_id?._id">
+                        <h6 class="text-muted small mb-1">User ID</h6>
+                        <div class="text-truncate" [title]="selectedLog.actor_id._id">
+                            {{ selectedLog.actor_id._id }}
+                        </div>
+                    </div>
+                    
+                    <!-- Action Details -->
+                    <div class="col-12 mt-4 mb-3">
+                        <h5 class="border-bottom pb-2 mb-3">Action Details</h5>
+                    </div>
+                    
+                    <div class="col-12 mb-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">Detailed Information</h6>
+                                <button class="btn btn-sm btn-outline-secondary" (click)="copyToClipboard(formatDetails(selectedLog.details))">
+                                    <i class="bi bi-clipboard"></i> Copy
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="p-3" style="max-height: 300px; overflow: auto;">
+                                    <pre class="mb-0" style="white-space: pre-wrap; font-family: 'Courier New', Courier, monospace;">{{ formatDetails(selectedLog.details) }}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Raw JSON View -->
+                    <div class="col-12 mb-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">Raw JSON</h6>
+                                <button class="btn btn-sm btn-outline-secondary" (click)="copyToClipboard(getJsonString(selectedLog))">
+                                    <i class="bi bi-clipboard"></i> Copy
+                                </button>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="p-3" style="max-height: 300px; overflow: auto;">
+                                    <pre class="mb-0 text-muted" style="font-size: 0.8rem;">{{ getJsonString(selectedLog) }}</pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- System Information -->
+                    <div class="col-12 mt-4 mb-3">
+                        <h5 class="border-bottom pb-2 mb-3">System Information</h5>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted small mb-1">Document Version</h6>
+                        <div>{{ selectedLog.__v || 'N/A' }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
