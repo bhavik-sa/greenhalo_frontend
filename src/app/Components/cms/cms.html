@@ -107,8 +107,8 @@
                   {{ page.status | titlecase }}
                 </span>
               </td>
-              <td>{{ formatDate(page.createdAt) }}</td>
-              <td>{{ formatDate(page.updatedAt) }}</td>
+              <td>{{ page.createdAt | date }}</td>
+              <td>{{ page.updatedAt | date }}</td>
               <td class="text-end">
                 <div class="btn-group" role="group">
                   <button 
@@ -214,11 +214,11 @@
             </tr>
             <tr>
               <th>Created</th>
-              <td>{{ formatDate(selectedPage?.createdAt) }}</td>
+              <td>{{ selectedPage?.createdAt | date }}</td>
             </tr>
             <tr>
               <th>Last Updated</th>
-              <td>{{ formatDate(selectedPage?.updatedAt) }}</td>
+              <td>{{ selectedPage?.updatedAt | date }}</td>
             </tr>
           </table>
         </div>
@@ -240,6 +240,15 @@
         <button type="button" class="btn-close" (click)="closeEditModal()" aria-label="Close"></button>
       </div>
       <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Page Name</label>
+          <input 
+            type="text" 
+            class="form-control" 
+            [(ngModel)]="editForm.page_name"
+            placeholder="Enter page name"
+          >
+        </div>
         <div class="mb-3">
           <label class="form-label">Status</label>
           <select class="form-select" [(ngModel)]="editForm.status">

@@ -91,7 +91,7 @@
                 <div class="text-center mb-4">
                   <div class="position-relative d-inline-block">
                     <div class="badge-avatar">
-                      <img *ngIf="selectedBadge.icon_url" 
+                      <img 
                           [src]="selectedBadge.icon_url" 
                           [alt]="selectedBadge.title"
                           class="img-fluid rounded-circle shadow"
@@ -138,14 +138,14 @@
 
                 <!-- Quick Actions -->
                 <div class="mt-auto">
-                  <button *ngIf="selectedBadge" 
+                  <!-- <button *ngIf="selectedBadge" 
                         class="btn btn-primary w-100 mb-2"
                         (click)="$event.preventDefault(); $event.stopPropagation(); router.navigate(['/badge', selectedBadge._id, 'edit'])">
                   <i class="bi bi-pencil-square me-2"></i>Edit Badge
-                </button>
-                  <button type="button" class="btn btn-outline-secondary w-100" (click)="showBadgeModal = false">
+                </button> -->
+                  <!-- <button type="button" class="btn btn-outline-secondary w-100" (click)="showBadgeModal = false">
                     <i class="bi bi-x-lg me-2"></i>Close
-                  </button>
+                  </button> -->
                 </div>
               </div>
             </div>
@@ -270,8 +270,8 @@
                   {{ badge.status ? 'Active' : 'Inactive' }}
                 </span>
               </td>
-              <td>{{ formatDate(badge.createdAt) }}</td>
-              <td>{{ formatDate(badge.updatedAt) }}</td>
+              <td>{{ badge.createdAt | date }}</td>
+              <td>{{ badge.updatedAt | date }}</td>
               <td class="text-end">
                 <div class="btn-group" role="group">
                   <button class="btn btn-sm btn-outline-primary" (click)="viewBadgeDetails(badge._id)">

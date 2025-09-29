@@ -85,55 +85,59 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  // Load user profile data
-  loadProfile(): void {
-    this.isLoading = true;
-    this.authService.getProfile().subscribe({
-      next: (response: any) => {
-        this.userProfile = response;
-        this.profileForm.patchValue({
-          name: response.name,
-          email: response.email,
-          profile_url: response.profile_url || ''
-        });
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading profile:', error);
-        this.toastService.error('Failed to load profile. Please try again.');
-        this.isLoading = false;
-      }
-    });
-  }
+// In profile.ts, update the loadProfile method:
+loadProfile(): void {
+  this.isLoading = true;
+  this.authService.getProfile().subscribe({
+    next: (response: any) => {
+      this.userProfile = response.data;
+      console.log('Profile data:', this.userProfile);
 
-  // Handle file selection
-  onFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      
-      // Validate file type
-      if (!file.type.match('image/.*')) {
-        this.toastService.error('Please select a valid image file');
-        return;
-      }
+      // ✅ Always prepend base URL if backend returns just the path
+      const profileUrl = this.userProfile.profile_url 
+        ? `${environment.apiUrl}/${this.userProfile.profile_url}`
+        : '';
 
-      // Validate file size (max 2MB)
-      if (file.size > 2 * 1024 * 1024) {
-        this.toastService.error('Image size should be less than 2MB');
-        return;
-      }
+      // ✅ Update userProfile object for direct binding
+      this.userProfile.profile_url = profileUrl;
 
-      this.selectedFile = file;
+      // ✅ Patch values into form
+      this.profileForm.patchValue({
+        name: this.userProfile.name,
+        email: this.userProfile.email,
+        profile_url: profileUrl
+      });
 
-      // Create preview
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.profileImagePreview = reader.result;
-      };
-      reader.readAsDataURL(file);
+      this.isLoading = false;
+    },
+    error: (error) => {
+      console.error('Error loading profile:', error);
+      this.toastService.error('Failed to load profile. Please try again.');
+      this.isLoading = false;
     }
+  });
+}
+
+
+onFileSelected(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+    
+    // Create a preview of the selected image
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      this.profileImagePreview = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    
+    // Update the form with the new file
+    this.profileForm.patchValue({
+      profile_url: file
+    });
+    this.profileForm.get('profile_url')?.updateValueAndValidity();
   }
+}
 
   // Upload profile image
   private uploadProfileImage(): Promise<string> {

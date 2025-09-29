@@ -135,5 +135,7 @@ export class Header implements OnInit, AfterViewInit {
 
   toggleSidebar(): void {
     this.toggleSidebarEvent.emit();
+    // Toggle a class on the body for global state if needed
+    document.body.classList.toggle('sidebar-collapsed');
   }
 }

@@ -26,7 +26,7 @@
                             class="form-control" 
                             formControlName="search"
                             (keyup.enter)="fetchAuditLogs(true)" 
-                            placeholder="Search by user email or action...">
+                            placeholder="Search ...">
                     </div>
                 </div>
                 <!-- <div class="col-md-3">
@@ -97,7 +97,7 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td>{{ log.createdAt }}</td>
+                                <td>{{ log.createdAt | date }}</td>
                             </tr>
                             <tr *ngIf="auditLogs.length === 0">
                                 <td colspan="4" class="text-center py-4">

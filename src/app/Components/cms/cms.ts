@@ -11,7 +11,7 @@ interface CmsPage {
   _id: string;
   page_name: string;
   content: string;
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  status: 'DRAFT' | 'PUBLISHED' | 'UNPUBLISHED';
   createdAt: string;
   updatedAt: string;
   __v: number;
@@ -78,7 +78,7 @@ export class CmsComponent implements OnInit {
   totalPages = 1;
   pageSizes = [5, 10, 20, 50];
   pageToDelete: string | null = null;
-  readonly statusOptions = ['DRAFT', 'PUBLISHED', 'ARCHIVED'];
+  readonly statusOptions = ['DRAFT', 'PUBLISHED', 'UNPUBLISHED'];
 
   // Date picker config
   datePickerConfig = {
@@ -88,14 +88,15 @@ export class CmsComponent implements OnInit {
   };
 
   editForm = {
+    page_name: '',
     content: '',
-    status: 'DRAFT' as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+    status: 'DRAFT' as 'DRAFT' | 'PUBLISHED' | 'UNPUBLISHED'
   };
 
   createForm = {
     page_name: '',
     content: '',
-    status: 'DRAFT' as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'
+    status: 'DRAFT' as 'DRAFT' | 'PUBLISHED' | 'UNPUBLISHED'
   };
 
   ngOnInit(): void {
@@ -157,7 +158,7 @@ export class CmsComponent implements OnInit {
       params = params.set('endDate', endDate.toISOString());
     }
 
-    this.http.get<CmsListResponse>('http://localhost:8000/admin/cms-page', { headers, params })
+    this.http.get<CmsListResponse>(`${environment.apiUrl}/admin/cms-page`, { headers, params })
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (response) => {
@@ -165,9 +166,9 @@ export class CmsComponent implements OnInit {
           this.totalItems = response.data.pagination.totalItems;
           this.totalPages = response.data.pagination.totalPages;
         },
-        error: (err) => {
-          console.error('Error fetching CMS pages:', err);
-          this.error = err.error?.message || 'Failed to load CMS pages';
+        error: (response) => {
+          console.error('Error fetching CMS pages:', response);
+          this.error = response.error?.message || 'Failed to load CMS pages';
           this.toast.error(this.error || 'Failed to load CMS pages');
         }
       });
@@ -187,16 +188,16 @@ export class CmsComponent implements OnInit {
       'Content-Type': 'application/json'
     });
 
-    this.http.get<CmsSingleResponse>(`http://localhost:8000/admin/cms-page?pageId=${pageId}`, { headers })
+    this.http.get<CmsSingleResponse>(`${environment.apiUrl}/admin/cms-page?pageId=${pageId}`, { headers })
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (response) => {
           this.selectedPage = response.data;
           this.showViewModal = true;
         },
-        error: (err) => {
-          console.error('Error fetching CMS page:', err);
-          this.toast.error(err.error?.message || 'Failed to load CMS page');
+        error: (response) => {
+          console.error('Error fetching CMS page:', response);
+          this.toast.error(response.error?.message || 'Failed to load CMS page');
           this.router.navigate(['/cms']);
         }
       });
@@ -205,6 +206,7 @@ export class CmsComponent implements OnInit {
   openEditModal(page: CmsPage): void {
     this.selectedPage = page;
     this.editForm = {
+      page_name: page.page_name,
       content: page.content,
       status: page.status
     };
@@ -231,7 +233,7 @@ export class CmsComponent implements OnInit {
     });
 
     this.http.put(
-      `http://localhost:8000/admin/cms-page/${this.selectedPage._id}`,
+      `${environment.apiUrl}/admin/cms-page/${this.selectedPage._id}`,
       this.editForm,
       { headers }
     )
@@ -242,9 +244,9 @@ export class CmsComponent implements OnInit {
         this.showEditModal = false;
         this.fetchCmsPages();
       },
-      error: (err) => {
-        console.error('Error updating page:', err);
-        this.toast.error(err.error?.message || 'Failed to update page');
+      error: (response) => {
+        console.error('Error updating page:', response);
+        this.toast.error(response.error?.message || 'Failed to update page');
       }
     });
   }
@@ -271,7 +273,7 @@ export class CmsComponent implements OnInit {
     });
 
     this.http.delete(
-      `http://localhost:8000/admin/cms-page/${this.pageToDelete}`,
+      `${environment.apiUrl}/admin/cms-page/${this.pageToDelete}`,
       { headers }
     )
     .pipe(finalize(() => {
@@ -284,9 +286,9 @@ export class CmsComponent implements OnInit {
         this.toast.success(response.message || 'Page deleted successfully');
         this.fetchCmsPages();
       },
-      error: (err) => {
-        console.error('Error deleting page:', err);
-        this.toast.error(err.error?.message || 'Failed to delete page');
+      error: (response) => {
+        console.error('Error deleting page:', response);
+        this.toast.error(response.error?.message || 'Failed to delete page');
       }
     });
   }
@@ -415,7 +417,7 @@ export class CmsComponent implements OnInit {
     });
 
     this.http.post<CmsSingleResponse>(
-      'http://localhost:8000/admin/cms-page',
+      `${environment.apiUrl}/admin/cms-page`,
       this.createForm,
       { headers }
     )
@@ -426,9 +428,9 @@ export class CmsComponent implements OnInit {
         this.showCreateModal = false;
         this.fetchCmsPages();
       },
-      error: (err) => {
-        console.error('Error creating page:', err);
-        this.toast.error(err.error?.message || 'Failed to create page');
+      error: (response) => {
+        console.error('Error creating page:', response);
+        this.toast.error(response.error?.message || 'Failed to create page');
       }
     });
   }

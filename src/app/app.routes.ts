@@ -15,6 +15,7 @@ import { BadgeEditComponent } from './Components/badge/badge-edit/badge-edit';
 import { BadgeManagementComponent } from './Components/badge/badge';
 import { AuditHistoryComponent } from './Components/audit-history/audit-history';
 import { ProfileComponent } from './Components/profile/profile';
+import { ReportManagementComponent } from './Components/report-management/report-management';
 export const routes: Routes = [
     {
         path: '',
@@ -83,6 +84,12 @@ export const routes: Routes = [
                 component: BadgeEditComponent,
                 canActivate: [authGuard],
                 title: 'Edit Badge'
+            },
+            {
+                path: 'report-management',
+                component: ReportManagementComponent,
+                canActivate: [authGuard],
+                title: 'Report Management'
             },
             {
                 path: 'audit-history',

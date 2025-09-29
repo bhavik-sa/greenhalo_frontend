@@ -294,7 +294,7 @@ export class AuthService {
    * @param data Reset password data
    */
   resetPassword(data: ResetPasswordRequest): Observable<ResetPasswordResponse> {
-    return this.http.post<ResetPasswordResponse>(
+    return this.http.patch<ResetPasswordResponse>(
       `${this.apiUrl}/auth/reset-password`,
       data,
       {
@@ -316,7 +316,6 @@ export class AuthService {
         'Authorization': `Bearer ${this.getToken()}`,
         'Accept': 'application/json'
       },
-      withCredentials: true
     });
   }
 
@@ -345,7 +344,7 @@ export class AuthService {
    * @param newPassword New password
    */
   changePassword(currentPassword: string, newPassword: string): Observable<ApiResponse> {
-    return this.http.post<ApiResponse>(
+    return this.http.patch<ApiResponse>(
       `${this.apiUrl}/auth/change-password`,
       {
         current_password: currentPassword,

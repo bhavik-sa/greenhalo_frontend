@@ -44,7 +44,9 @@ interface User {
 
 interface ApiResponse {
   status: number;
+  message: string;
   data: {
+    message: string;
     results: User[];
     unassignedBadges: Badge[];
     assignedBadges: Badge[];
@@ -296,24 +298,27 @@ export class UserManagementComponent implements OnInit {
       removeBadgeId: this.removeBadgeId
     };
     
-    this.http.put(
+    this.http.put<ApiResponse>(
       `${environment.apiUrl}/admin/update/${this.selectedUser._id}`,
       formData,
       { headers: this.getHeaders() }
     ).subscribe({
-      next: () => {
+      next: (response: ApiResponse) => {
+        console.log(response);
+        
         // Update the user in the local array
         const index = this.users.findIndex(u => u._id === this.selectedUser?._id);
         if (index !== -1) {
           this.users[index] = { ...this.users[index], ...formData };
         }
         
-        this.toastService.success('User updated successfully');
+        this.toastService.success(response.message);
         this.closeEditModal();
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error updating user:', error);
-        this.toastService.error('Failed to update user');
+        const errorMessage = error?.error?.message || 'Failed to update user';
+        this.toastService.error(errorMessage);
       }
     });
   }
@@ -350,8 +355,6 @@ export class UserManagementComponent implements OnInit {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
     });
   }
 
