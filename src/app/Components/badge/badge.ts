@@ -221,7 +221,7 @@ export class BadgeManagementComponent implements OnInit {
       'Content-Type': 'application/json'
     });
 
-    this.http.get<BadgeListResponse>('http://localhost:8000/admin/badge', { headers, params })
+    this.http.get<BadgeListResponse>(`${this.apiUrl}/admin/badge`, { headers, params })
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (response) => {
@@ -250,7 +250,7 @@ export class BadgeManagementComponent implements OnInit {
 
     const params = new HttpParams().set('badgeId', badgeId);
 
-    this.http.get<{ status: number; data: any }>('http://localhost:8000/admin/badge', { 
+    this.http.get<{ status: number; data: any }>(`${this.apiUrl}/admin/badge`, { 
       headers,
       params,
     })
@@ -318,7 +318,7 @@ export class BadgeManagementComponent implements OnInit {
     });
 
     this.http.delete(
-      `http://localhost:8000/admin/delete/badge/${this.badgeToDelete}`,
+      `${this.apiUrl}/admin/delete/badge/${this.badgeToDelete}`,
       { headers }
     )
     .pipe(finalize(() => {
@@ -428,7 +428,7 @@ export class BadgeManagementComponent implements OnInit {
     });
 
     this.http.put(
-      `http://localhost:8000/admin/update/badge/${badgeId}`,
+      `${this.apiUrl}/admin/update/badge/${badgeId}`,
       formData,
       { headers }
     )

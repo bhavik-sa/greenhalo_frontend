@@ -6,6 +6,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angul
 import { finalize } from 'rxjs/operators';
 import { ToastService } from 'src/app/shared/toast.service';
 import { RouterModule } from '@angular/router';
+import { environment } from 'src/environments/environment';
 
 interface User {
   _id: string;
@@ -56,7 +57,7 @@ export class ContactUsComponent implements OnInit {
   private http = inject(HttpClient);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
-
+  private apiUrl = environment.apiUrl;
   contactRequests: ContactRequest[] = [];
   selectedRequest: ContactRequest | null = null;
   showResponseModal = false;
@@ -159,7 +160,7 @@ export class ContactUsComponent implements OnInit {
       params = params.set('endDate', endDate.toISOString());
     }
 
-    this.http.get<ContactListResponse>('http://localhost:8000/admin/contact-request', { headers, params })
+    this.http.get<ContactListResponse>(`${this.apiUrl}/admin/contact-request`, { headers, params })
       .pipe(finalize(() => this.isLoading = false))
       .subscribe({
         next: (response) => {
@@ -191,7 +192,7 @@ export class ContactUsComponent implements OnInit {
     });
   
     this.http.get<any>(
-      `http://localhost:8000/admin/contact-request?contactId=${request._id}`,
+      `${this.apiUrl}/admin/contact-request?contactId=${request._id}`,
       { headers }
     )
     .pipe(finalize(() => this.isLoading = false))
@@ -246,7 +247,7 @@ export class ContactUsComponent implements OnInit {
     });
 
     this.http.put(
-      `http://localhost:8000/admin/contact-request/respond/${this.selectedRequest._id}`,
+      `${this.apiUrl}/admin/contact-request/respond/${this.selectedRequest._id}`,
       this.responseForm,
       { headers }
     )
