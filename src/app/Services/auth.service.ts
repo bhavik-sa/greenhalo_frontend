@@ -96,7 +96,6 @@ export class AuthService {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      withCredentials: true
     });
   }
 
@@ -106,7 +105,6 @@ export class AuthService {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      withCredentials: true // Important for handling cookies/sessions
     }).pipe(
       tap(response => {
         // IMPORTANT: prioritize MFA check BEFORE handling a normal token
@@ -166,7 +164,6 @@ export class AuthService {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      withCredentials: true
     });
   }
 
@@ -202,7 +199,6 @@ export class AuthService {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        withCredentials: true
       }).pipe(
         tap((res) => {
           const token = res?.data?.access_token || res?.access_token || res?.token;
@@ -230,7 +226,6 @@ export class AuthService {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
-      withCredentials: true
     }).pipe(
       tap((res) => {
         const token = res?.token || res?.access_token || res?.data?.access_token;
@@ -284,7 +279,6 @@ export class AuthService {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        withCredentials: true
       }
     );
   }
@@ -302,7 +296,6 @@ export class AuthService {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        withCredentials: true
       }
     );
   }
@@ -333,7 +326,6 @@ export class AuthService {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        withCredentials: true
       }
     );
   }
@@ -356,7 +348,6 @@ export class AuthService {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        withCredentials: true
       }
     );
   }

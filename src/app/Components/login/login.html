@@ -1,4 +1,9 @@
-<div class="login-page bg-body-secondary">
+<!-- Loading Overlay -->
+<div *ngIf="isLoading" class="loading-overlay">
+    <div class="loading-spinner"></div>
+</div>
+
+<div class="login-page bg-body-secondary" [class.blur-content]="isLoading">
     <div class="login-box">
         <div class="login-logo">
             <a href="#"><b>Admin</b>LTE</a>

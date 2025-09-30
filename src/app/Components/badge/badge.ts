@@ -99,6 +99,61 @@ export class BadgeManagementComponent implements OnInit {
     });
   }
 
+  /**
+   * Check if the media is a video based on MIME type or URL extension
+   */
+  isVideo(mimeTypeOrUrl: string): boolean {
+    if (!mimeTypeOrUrl) return false;
+    
+    // Check MIME type
+    if (mimeTypeOrUrl.startsWith('video/')) {
+      return true;
+    }
+    
+    // Check file extension
+    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.wmv'];
+    const lowerUrl = mimeTypeOrUrl.toLowerCase();
+    return videoExtensions.some(ext => lowerUrl.endsWith(ext));
+  }
+
+  /**
+   * Get the file type from MIME type or URL
+   */
+  getFileType(mimeTypeOrUrl: string): string {
+    if (!mimeTypeOrUrl) return 'file';
+    
+    // If it's a MIME type, return the subtype
+    if (mimeTypeOrUrl.includes('/')) {
+      return mimeTypeOrUrl.split('/')[1] || 'file';
+    }
+    
+    // Otherwise, try to get extension from URL
+    const parts = mimeTypeOrUrl.split('.');
+    if (parts.length > 1) {
+      return parts[parts.length - 1];
+    }
+    
+    return 'file';
+  }
+
+  /**
+   * Get the full media URL, handling relative paths
+   */
+  getFullMediaUrl(url: string): string {
+    if (!url) return '';
+    
+    // If it's already a full URL, return as is
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+      return url;
+    }
+    
+    // Handle public paths (remove 'public/' if present)
+    const cleanUrl = url.startsWith('public/') ? url.substring(7) : url;
+    
+    // Construct full URL using the API base URL
+    return `${this.apiUrl}/${cleanUrl}`.replace(/([^:]\/)\/+/g, '$1');
+  }
+
   // Handle items per page change
   onItemsPerPageChange(): void {
     this.currentPage = 1;
@@ -198,7 +253,6 @@ export class BadgeManagementComponent implements OnInit {
     this.http.get<{ status: number; data: any }>('http://localhost:8000/admin/badge', { 
       headers,
       params,
-      withCredentials: true
     })
     .pipe(finalize(() => this.isLoadingBadgeDetails = false))
     .subscribe({

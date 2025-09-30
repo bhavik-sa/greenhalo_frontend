@@ -174,35 +174,52 @@
                 </div>
                 
                 <div class="row g-3">
-                  <div *ngFor="let media of selectedBadge.safer_dating_media" class="col-6 col-md-4">
+                  <div *ngFor="let media of selectedBadge.safer_dating_media" class="col-12 col-md-6 col-lg-4">
                     <div class="card h-100 border-0 shadow-sm hover-shadow transition-all">
-                      <div class="position-relative" style="height: 120px; overflow: hidden;">
-                        <img [src]="media.url" 
+                      <div class="position-relative" style="min-height: 200px; max-height: 250px; overflow: hidden;">
+                        <!-- Video Player -->
+                        <div *ngIf="isVideo(media.mime_type || media.url)" class="h-100 w-100 bg-dark">
+                          <video controls class="w-100 h-100" style="object-fit: contain; background-color: #000;">
+                            <source [src]="getFullMediaUrl(media.url)" [type]="media.mime_type || 'video/mp4'">
+                            Your browser does not support the video tag.
+                          </video>
+                        </div>
+                        
+                        <!-- Image Viewer -->
+                        <img *ngIf="!isVideo(media.mime_type || media.url)" 
+                             [src]="getFullMediaUrl(media.url)" 
                              class="card-img-top h-100 w-100" 
                              [alt]="media.original_name || 'Media'" 
                              style="object-fit: cover;">
+                        
                         <div class="position-absolute top-0 end-0 p-2">
-                          <span class="badge bg-dark bg-opacity-75">{{ (media?.mime_type?.split('/')?.[1] || media?.mime_type || 'file').toUpperCase() }}</span>
+                          <span class="badge bg-dark bg-opacity-75">
+                            {{ getFileType(media.mime_type || media.url) | uppercase }}
+                          </span>
                         </div>
                       </div>
-                      <div class="card-body p-3">
+                      
+                      <!-- <div class="card-body p-3">
                         <h6 class="card-title text-truncate mb-1">{{ media.original_name || 'Media' }}</h6>
                         <p class="card-text small text-muted mb-0">
-                          <i class="bi bi-file-earmark-text me-1"></i>{{ media.size | fileSize }}
+                          <i class="bi" [ngClass]="isVideo(media.mime_type || media.url) ? 'bi-camera-video' : 'bi-file-earmark-image'"></i>
+                          {{ media.size | fileSize }}
                         </p>
-                      </div>
-                      <div class="card-footer bg-transparent border-top-0 pt-0">
+                      </div> -->
+                      
+                      <div class="card-footer bg-transparent border-top-0 pt-0 mt-3">
                         <div class="d-flex justify-content-between">
-                          <a [href]="media.url" 
+                          <a [href]="getFullMediaUrl(media.url)" 
                              target="_blank" 
                              class="btn btn-sm btn-outline-primary"
-                             title="View Full Size">
-                            <i class="bi bi-arrows-fullscreen"></i>
+                             [title]="isVideo(media.mime_type || media.url) ? 'Watch Video' : 'View Full Size'">
+                            <i class="bi" [ngClass]="isVideo(media.mime_type || media.url) ? 'bi-play-circle' : 'bi-arrows-fullscreen'"></i>
+                            {{ isVideo(media.mime_type || media.url) ? ' Play' : ' View' }}
                           </a>
                           <button class="btn btn-sm btn-outline-secondary" 
-                                  (click)="copyToClipboard(media.url)"
+                                  (click)="copyToClipboard(getFullMediaUrl(media.url))"
                                   title="Copy URL">
-                            <i class="bi bi-link-45deg"></i>
+                            <i class="bi bi-link-45deg"></i> Copy Link
                           </button>
                         </div>
                       </div>

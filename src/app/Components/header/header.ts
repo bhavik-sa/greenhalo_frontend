@@ -36,13 +36,11 @@ export class Header implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     // Get the current user from the auth service
-    this.currentUser = this.authService.getCurrentUser();
-    if (this.currentUser?.profile_url) {
-      // Prepend the base URL if it's a relative path
-      this.profileImage = this.currentUser.profile_url.startsWith('http') 
-        ? this.currentUser.profile_url 
-        : `${environment.apiUrl}/${this.currentUser.profile_url}`;
-    }
+    this.currentUser = this.authService.getProfile();
+    this.currentUser.subscribe((response: any) => {
+      this.currentUser = response.data;
+      this.profileImage = `${environment.apiUrl}/${this.currentUser.profile_url}`;
+    });
   }
 
   // Handle image loading errors
