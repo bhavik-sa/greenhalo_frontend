@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build -- --configuration=production"
+  command = "npm run build:prod"
   publish = "dist/frontend"
 
 [[redirects]]
