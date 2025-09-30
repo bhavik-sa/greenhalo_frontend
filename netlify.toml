@@ -1,7 +1,6 @@
 [build]
   command = "npm run build -- --configuration=production"
   publish = "dist/frontend"
-  environment = { API_BASE_URL = "https://greenhalo.onrender.com" }
 
 [[redirects]]
   from = "/*"
