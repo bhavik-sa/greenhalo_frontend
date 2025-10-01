@@ -145,106 +145,21 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <canvas id="badgeDistributionChart" style="min-height: 300px; height: 300px; max-height: 300px; max-width: 100%;"></canvas>
+                            <div *ngIf="stats.badges.distribution.length === 0" class="text-center p-4">
+                                <i class="fas fa-award fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">No badge data available. Start assigning badges to see the distribution.</p>
+                                <a [routerLink]="['/badge']" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus mr-1"></i> Manage Badges
+                                </a>
+                            </div>
+                            <div *ngIf="stats.badges.distribution.length > 0" class="chart-container">
+                                <canvas id="badgeDistributionChart" style="min-height: 300px; height: 300px; max-height: 300px; max-width: 100%;"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tables Row -->
-            <div class="row">
-                <!-- Recent Contact Requests -->
-                <!-- <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Recent Contact Requests</h3>
-                            <div class="card-tools">
-                                <span class="badge badge-danger">{{ stats.contactRequests.pending }} Pending</span>
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>User</th>
-                                            <th>Subject</th>
-                                            <th>Message</th>
-                                            <th>Status</th>
-                                            <th>Date</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr *ngFor="let contact of stats.recentContacts | slice:0:5">
-                                            <td>{{ contact.user_id || 'N/A' }}</td>
-                                            <td>{{ contact.subject || 'No Subject' }}</td>
-                                            <td>{{ contact.message || 'No Message' }}</td>
-                                            <td>
-                                                <span class="badge" [ngClass]="{
-                                                    'badge-warning': contact.status === 'pending',
-                                                    'badge-info': contact.status === 'in_progress',
-                                                    'badge-success': contact.status === 'resolved',
-                                                    'badge-secondary': !contact.status
-                                                }">
-                                                    {{ contact.status ? (contact.status | titlecase) : 'New' }}
-                                                </span>
-                                            </td>
-                                            <td>{{ contact.createdAt | date:'short' }}</td>
-                                            <td>
-                                                <button class="btn btn-sm btn-primary" [routerLink]="['/admin/contact-requests', contact._id]">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="card-footer text-right">
-                            <a [routerLink]="['/contact-us']" class="btn btn-sm btn-secondary">
-                                View All Requests ({{ stats.contactRequests.total }})
-                            </a>
-                        </div>
-                    </div>
-                </div>   -->
-
-                <!-- Recent Activity -->
-                <!-- <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Recent Activity</h3>
-                            <div class="card-tools">
-                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                    <i class="fas fa-minus"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body p-0">
-                            <ul class="products-list product-list-in-card pl-2 pr-2">
-                                <li *ngFor="let log of stats.recentAuditLogs | slice:0:5" class="item">
-                                    <div class="product-info">
-                                        <a href="javascript:void(0)" class="product-title">
-                                            {{ log.action || 'Activity' }}
-                                            <span class="badge {{ getLogBadgeClass(log.action) }} float-right">
-                                                <i class="fas {{ getLogIcon(log.action) }}"></i>
-                                            </span>
-                                        </a>
-                                        <span class="product-description">
-                                            {{ log.user?.email || 'System' }} - {{ log.createdAt | date:'medium' }}
-                                        </span>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="card-footer text-center">
-                            <a [routerLink]="['/audit-history']" class="uppercase">View All Activity</a>
-                        </div>
-                    </div>
-                </div> -->
-            </div>
         </div>
     </section>
 </div>

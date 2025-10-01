@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, tap, map } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
 export interface LoginRequest {
@@ -50,9 +50,9 @@ export interface ProfileResponse {
 }
 
 export interface UpdateProfileRequest {
-  name: string;
-  email: string;
-  profile_url?: string;
+  name?: string;
+  email?: string;
+  profile_image?: File | string;
   // Add other updateable fields
 }
 
@@ -314,20 +314,23 @@ export class AuthService {
 
   /**
    * Update user profile
-   * @param profileData Profile data to update
+   * @param profileData Profile data to update (can be FormData or UpdateProfileRequest)
    */
-  updateProfile(profileData: UpdateProfileRequest): Observable<ApiResponse> {
-    return this.http.put<ApiResponse>(
-      `${this.apiUrl}/auth/profile`,
-      profileData,
-      {
-        headers: {
-          'Authorization': `Bearer ${this.getToken()}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
+  updateProfile(profileData: UpdateProfileRequest | FormData): Observable<ApiResponse> {
+    // If it's FormData, we need to set the content type to undefined so the browser can set it with the correct boundary
+    const options = {
+      headers: {
+        'Authorization': `Bearer ${this.getToken()}`,
+        ...(profileData instanceof FormData ? {} : { 'Content-Type': 'application/json' })
       }
-    );
+    };
+
+    // Convert to JSON if it's not FormData
+    const body = profileData instanceof FormData 
+      ? profileData 
+      : JSON.stringify(profileData);
+
+    return this.http.put<ApiResponse>(`${this.apiUrl}/auth/profile`, body, options);
   }
 
   /**
@@ -349,6 +352,42 @@ export class AuthService {
           'Accept': 'application/json'
         },
       }
+    ).pipe(
+      catchError((error: HttpErrorResponse) => {
+        // Handle different types of errors
+        let errorMessage = 'An error occurred while changing the password';
+        
+        if (error.status === 0) {
+          // Client-side or network error
+          errorMessage = 'Unable to connect to the server. Please check your internet connection.';
+        } else if (error.status === 400) {
+          // Bad request - validation errors
+          if (error.error && error.error.message) {
+            errorMessage = error.error.message;
+          } else if (error.error && typeof error.error === 'object') {
+            // Handle validation errors that might be in the error object
+            const errorObj = error.error as Record<string, any>;
+            const errorValues = Object.values(errorObj).flat();
+            errorMessage = errorValues.length > 0 ? String(errorValues[0]) : 'Invalid request data';
+          }
+        } else if (error.status === 401) {
+          // Unauthorized
+          errorMessage = 'Your session has expired. Please log in again.';
+          // Optionally handle logout here
+          // this.logout();
+        } else if (error.status === 403) {
+          // Forbidden
+          errorMessage = 'You do not have permission to perform this action.';
+        } else if (error.status >= 500) {
+          // Server error
+          errorMessage = 'A server error occurred. Please try again later.';
+        }
+        
+        // Create a custom error object with a user-friendly message
+        const customError = new Error(errorMessage);
+        (customError as any).originalError = error;
+        return throwError(() => customError);
+      })
     );
   }
 }

@@ -176,6 +176,7 @@ export class Dashboard implements OnInit, AfterViewInit {
     ).subscribe({
       next: (response) => {
         if (response.data) {
+          console.log(this.stats.badges.distribution)
           this.stats = {
             ...response.data,
             recentContacts: this.stats.recentContacts,

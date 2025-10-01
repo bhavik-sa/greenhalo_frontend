@@ -43,10 +43,10 @@ export class ProfileComponent implements OnInit {
     private router: Router,
     private http: HttpClient
   ) {
-    // Initialize profile form
+    // Initialize profile form with all fields optional
     this.profileForm = this.fb.group({
-      name: ['', [Validators.required]],
-      email: ['', [Validators.required, Validators.email]],
+      name: [''],
+      email: ['', [Validators.email]],  // Email is optional but must be valid if provided
       profile_url: ['']
     });
 
@@ -71,7 +71,7 @@ export class ProfileComponent implements OnInit {
         this.activeTab = 'profile';
       }
     });
-    
+
     this.loadProfile();
   }
 
@@ -85,59 +85,58 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-// In profile.ts, update the loadProfile method:
-loadProfile(): void {
-  this.isLoading = true;
-  this.authService.getProfile().subscribe({
-    next: (response: any) => {
-      this.userProfile = response.data;
-      console.log('Profile data:', this.userProfile);
+  // Load user profile data
+  loadProfile(): void {
+    this.isLoading = true;
+    this.authService.getProfile().subscribe({
+      next: (response: any) => {
+        this.userProfile = response.data;
 
-      // ✅ Always prepend base URL if backend returns just the path
-      const profileUrl = this.userProfile.profile_url 
-        ? `${environment.apiUrl}/${this.userProfile.profile_url}`
-        : '';
+        // Handle profile URL with fallback to default
+        const profileUrl = this.userProfile.profile_url
+          ? `${environment.apiUrl}/${this.userProfile.profile_url}`
+          : '/assets/admin.webp';
 
-      // ✅ Update userProfile object for direct binding
-      this.userProfile.profile_url = profileUrl;
+        // Update userProfile object
+        this.userProfile.profile_url = profileUrl;
 
-      // ✅ Patch values into form
-      this.profileForm.patchValue({
-        name: this.userProfile.name,
-        email: this.userProfile.email,
-        profile_url: profileUrl
-      });
+        // Patch only the values that exist in the response
+        const formData: any = {};
+        if (this.userProfile.name) formData.name = this.userProfile.name;
+        if (this.userProfile.email) formData.email = this.userProfile.email;
+        formData.profile_url = profileUrl;
 
-      this.isLoading = false;
-    },
-    error: (error) => {
-      console.error('Error loading profile:', error);
-      this.toastService.error('Failed to load profile. Please try again.');
-      this.isLoading = false;
-    }
-  });
-}
+        this.profileForm.patchValue(formData);
 
-
-onFileSelected(event: Event): void {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files[0]) {
-    const file = input.files[0];
-    
-    // Create a preview of the selected image
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      this.profileImagePreview = e.target.result;
-    };
-    reader.readAsDataURL(file);
-    
-    // Update the form with the new file
-    this.profileForm.patchValue({
-      profile_url: file
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading profile:', error);
+        this.toastService.error('Failed to load profile. Please try again.');
+        this.isLoading = false;
+      }
     });
-    this.profileForm.get('profile_url')?.updateValueAndValidity();
   }
-}
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+
+      // Create a preview of the selected image
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.profileImagePreview = e.target.result;
+      };
+      reader.readAsDataURL(file);
+
+      // Update the form with the new file
+      this.profileForm.patchValue({
+        profile_url: file
+      });
+      this.profileForm.get('profile_url')?.updateValueAndValidity();
+    }
+  }
 
   // Upload profile image
   private uploadProfileImage(): Promise<string> {
@@ -149,8 +148,6 @@ onFileSelected(event: Event): void {
         return;
       }
 
-      console.log('Selected file:', this.selectedFile.name, 'size:', this.selectedFile.size, 'type:', this.selectedFile.type);
-      
       const formData = new FormData();
       formData.append('profile_image', this.selectedFile, this.selectedFile.name);
 
@@ -162,16 +159,16 @@ onFileSelected(event: Event): void {
         return;
       }
 
-      console.log('Sending request to:', `${environment.apiUrl}/auth/profile`);
-      
-      this.http.put<{url: string, status: number}>(`${environment.apiUrl}/auth/profile`, formData, {
+
+
+      this.http.put<{ url: string, status: number }>(`${environment.apiUrl}/auth/profile`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Accept': 'application/json'
         },
         reportProgress: true
       }).subscribe({
-        next: (response: {url: string, status: number}) => {
+        next: (response: { url: string, status: number }) => {
           console.log('Upload successful, response:', response);
           if (response.status !== 200) {
             const error = new Error('Invalid response from server');
@@ -199,6 +196,7 @@ onFileSelected(event: Event): void {
 
   // Update profile
   async onProfileSubmit(): Promise<void> {
+    // Check if the form is valid (email format if provided)
     if (this.profileForm.invalid) {
       this.profileForm.markAllAsTouched();
       return;
@@ -207,48 +205,46 @@ onFileSelected(event: Event): void {
     this.isLoading = true;
 
     try {
-      let profileImageUrl = this.profileForm.value.profile_url;
-      
-      // Upload new profile image if selected
-      if (this.selectedFile) {
-        try {
-          console.log('Starting profile image upload...');
-          profileImageUrl = await this.uploadProfileImage();
-          
-          this.profileForm.patchValue({ profile_url: profileImageUrl });
-        } catch (error) {
-          console.error('Error uploading profile image:', error);
-          this.toastService.error('Failed to upload profile image');
-          this.isLoading = false;
-          return;
-        }
+      const formData = new FormData();
+      let hasChanges = false;
+      const formValues = this.profileForm.value;
+
+      // Check which fields have been changed and add them to formData
+      if (formValues.name !== undefined && formValues.name !== this.userProfile?.name) {
+        formData.append('name', formValues.name);
+        hasChanges = true;
       }
 
-      const profileData: UpdateProfileRequest = {
-        name: this.profileForm.value.name,
-        email: this.profileForm.value.email,
-        profile_url: profileImageUrl || ''
-      };
+      if (formValues.email !== undefined && formValues.email !== this.userProfile?.email) {
+        formData.append('email', formValues.email);
+        hasChanges = true;
+      }
 
-      this.authService.updateProfile(profileData).subscribe({
+      // Handle profile image if changed
+      if (formValues.profile_url instanceof File) {
+        formData.append('profile_image', formValues.profile_url);
+        hasChanges = true;
+      }
+
+      // If no changes, show message and return
+      if (!hasChanges) {
+        this.toastService.info('No changes detected.');
+        this.isLoading = false;
+        return;
+      }
+
+      // Call the update service
+      this.authService.updateProfile(formData).subscribe({
         next: (response) => {
-          this.toastService.success('Profile updated successfully');
-          // Update local user data
-          const user = this.authService.getCurrentUser();
-          if (user) {
-            user.name = profileData.name;
-            user.email = profileData.email;
-            user.profile_url = profileData.profile_url;
-            localStorage.setItem('user', JSON.stringify(user));
-          }
-          this.selectedFile = null; // Reset selected file after successful update
-          this.loadProfile(); // Reload profile to get the latest data
+          this.toastService.success('Profile updated successfully!');
+          this.loadProfile(); // Reload profile to get updated data
           this.isLoading = false;
+          this.profileImagePreview = null; // Reset preview
+          this.selectedFile = null; // Reset selected file
         },
         error: (error) => {
           console.error('Error updating profile:', error);
-          const errorMessage = error.error?.message || 'Failed to update profile. Please try again.';
-          this.toastService.error(errorMessage);
+          this.toastService.error(error.error?.message || 'Failed to update profile. Please try again.');
           this.isLoading = false;
         }
       });
@@ -258,30 +254,100 @@ onFileSelected(event: Event): void {
       this.isLoading = false;
     }
   }
-  resetForm() {
-    throw new Error('Method not implemented.');
+
+  resetForm(): void {
+    this.profileForm.reset();
+    this.profileImagePreview = null;
+    this.selectedFile = null;
+    // Reset the file input element
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
 
   // Change password
   onChangePassword(): void {
+    // Mark all fields as touched to trigger validation messages
+    this.passwordForm.markAllAsTouched();
+    
+    // Check if form is invalid
     if (this.passwordForm.invalid) {
-      this.passwordForm.markAllAsTouched();
+      // Find the first invalid control and show its error
+      const invalidControl = Object.keys(this.passwordForm.controls).find(key => {
+        const control = this.passwordForm.get(key);
+        return control?.invalid && (control?.touched || control?.dirty);
+      });
+      
+      if (invalidControl) {
+        const control = this.passwordForm.get(invalidControl);
+        const errors = control?.errors || {};
+        
+        if (errors['required']) {
+          const fieldName = invalidControl === 'currentPassword' ? 'Current password' : 
+                           invalidControl === 'newPassword' ? 'New password' : 'Confirm password';
+          this.toastService.error(`${fieldName} is required`);
+        } else if (errors['minlength']) {
+          this.toastService.error('Password must be at least 8 characters long');
+        } else if (errors['passwordStrength']) {
+          this.toastService.error(errors['passwordStrength']);
+        } else if (errors['passwordMismatch']) {
+          this.toastService.error('New password and confirm password do not match');
+        } else {
+          this.toastService.error('Please fill in all required fields correctly');
+        }
+      } else {
+        this.toastService.error('Please correct the errors in the form');
+      }
       return;
     }
-
+    
+    // Check if passwords match (additional check, though form validation should catch this)
+    if (this.passwordForm.value.newPassword !== this.passwordForm.value.confirmPassword) {
+      this.toastService.error('New password and confirm password do not match');
+      return;
+    }
+    
     this.isPasswordLoading = true;
     const { currentPassword, newPassword } = this.passwordForm.value;
-
+    
     this.authService.changePassword(currentPassword, newPassword).subscribe({
       next: (response) => {
-        this.toastService.success('Password changed successfully');
+        this.toastService.success(response.message);
         this.passwordForm.reset();
         this.isPasswordLoading = false;
+        
+        // Optional: Close the password form or switch to profile tab
       },
       error: (error) => {
-        console.error('Error changing password:', error);
-        const errorMessage = error.error?.message || 'Failed to change password. Please try again.';
-        this.toastService.error(errorMessage);
+        console.error('Password change error:', error);
+        
+        // Default error message
+        let errorMessage = 'Failed to change password. Please try again.';
+        
+        // Extract error message from different possible locations in the error object
+        if (error?.message) {
+          errorMessage = error.message;
+        } else if (error?.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error?.error) {
+          // Handle error object that might be a string or an object
+          errorMessage = typeof error.error === 'string' 
+            ? error.error 
+            : 'Invalid password or server error';
+        }
+        
+        // Log the error for debugging
+        console.log('Displaying error toast with message:', errorMessage);
+        
+        // Show error to user with a longer timeout
+        this.toastService.error(errorMessage, 'Error', 10000);
+        
+        // Clear sensitive fields on error
+        this.passwordForm.get('currentPassword')?.reset();
+        this.passwordForm.get('newPassword')?.reset();
+        this.passwordForm.get('confirmPassword')?.reset();
+        
         this.isPasswordLoading = false;
       }
     });
@@ -290,22 +356,26 @@ onFileSelected(event: Event): void {
   // Custom password validator
   private passwordValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
-      if (!control.value) {
+      const value = control.value;
+      if (!value || typeof value !== 'string') {
+        return null; // Return null for empty or invalid values
+      }
+
+      const hasMinLength = value.length >= 8;
+      const hasUpperCase = /[A-Z]/.test(value);
+      const hasLowerCase = /[a-z]/.test(value);
+      const hasNumber = /[0-9]/.test(value);
+      const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
+
+      // If all validations pass
+      if (hasMinLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar) {
         return null;
       }
 
-      const hasUpperCase = /[A-Z]/.test(control.value);
-      const hasLowerCase = /[a-z]/.test(control.value);
-      const hasNumber = /[0-9]/.test(control.value);
-      const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(control.value);
-
-      const valid = hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
-
-      if (!valid) {
-        return { passwordStrength: 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character' };
-      }
-
-      return null;
+      // If any validation fails, return the standard error message
+      return {
+        passwordStrength: 'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.'
+      };
     };
   }
 
@@ -319,11 +389,23 @@ onFileSelected(event: Event): void {
         return null;
       }
 
-      if (newPassword.value !== confirmPassword.value) {
-        return { passwordMismatch: 'Passwords do not match' };
+      // Only validate if both fields have values
+      if (!newPassword.value || !confirmPassword.value) {
+        return null;
       }
 
-      return null;
+      if (newPassword.value !== confirmPassword.value) {
+        // Set error on confirmPassword control
+        confirmPassword.setErrors({ passwordMismatch: true });
+        return { passwordMismatch: true };
+      } else {
+        // Clear any existing mismatch errors
+        if (confirmPassword.hasError('passwordMismatch')) {
+          delete confirmPassword.errors?.['passwordMismatch'];
+          confirmPassword.updateValueAndValidity();
+        }
+        return null;
+      }
     };
   }
 
@@ -334,5 +416,15 @@ onFileSelected(event: Event): void {
 
   get passwordFormControls() {
     return this.passwordForm.controls;
+  }
+
+  // Handle closing the profile/password forms
+  onClose(): void {
+    // Reset forms
+    this.resetForm();
+    this.passwordForm.reset();
+
+    // Navigate back to the dashboard
+    this.router.navigate(['/dashboard']);
   }
 }

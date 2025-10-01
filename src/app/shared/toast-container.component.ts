@@ -17,37 +17,57 @@ import { Toast, ToastService } from './toast.service';
     </div>
   `,
   styles: [`
+    /* Ensure the toast container is always on top */
     .gh-toast-container {
       position: fixed;
-      top: 1rem;
-      right: 1rem;
-      z-index: 20000;
+      top: 20px;
+      right: 20px;
+      z-index: 99999; /* Very high z-index to ensure it's above everything */
       display: flex;
       flex-direction: column;
-      gap: .5rem;
+      gap: 10px;
       pointer-events: none;
     }
+    
+    /* Toast styling */
     .gh-toast {
-      min-width: 260px;
-      max-width: 420px;
+      min-width: 300px;
+      max-width: 450px;
       background: #fff;
       color: #333;
-      border-radius: 6px;
-      box-shadow: 0 6px 16px rgba(0,0,0,.15);
-      padding: .75rem 2rem .75rem .75rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      padding: 16px 20px;
       border-left: 4px solid #6c757d;
       position: relative;
       pointer-events: auto;
+      opacity: 0.95;
+      transition: all 0.3s ease;
     }
-    .gh-toast-title { font-weight: 600; margin-bottom: .25rem; }
-    .gh-toast-message { font-size: .95rem; }
+    .gh-toast:hover {
+      opacity: 1;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+    .gh-toast-title { 
+      font-weight: 600; 
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    .gh-toast-message { 
+      font-size: 14px;
+      line-height: 1.5;
+    }
     .gh-toast-close {
       position: absolute;
-      right: .5rem;
-      top: .25rem;
+      right: 10px;
+      top: 10px;
       border: none;
       background: transparent;
-      font-size: 1.25rem;
+      font-size: 20px;
+      cursor: pointer;
+      color: #6c757d;
+      padding: 0 8px;
+      line-height: 1;
       line-height: 1;
       cursor: pointer;
       color: #666;

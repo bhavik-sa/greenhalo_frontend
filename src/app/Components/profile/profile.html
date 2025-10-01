@@ -23,8 +23,9 @@
 
       <!-- Profile Tab Content -->
       <div *ngIf="activeTab === 'profile'" class="card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
           <h4 class="mb-0">Profile Information</h4>
+          <button type="button" class="btn-close ms-auto" aria-label="Close" (click)="onClose()"></button>
         </div>
         <div class="card-body">
           <form [formGroup]="profileForm" (ngSubmit)="onProfileSubmit()">
@@ -72,7 +73,10 @@
             </div>
 
 
-            <div class="d-flex justify-content-end">
+            <div class="d-flex justify-content-between">
+              <!-- <button type="button" class="btn btn-outline-secondary" (click)="onClose()">
+                <i class="bi bi-x-lg me-1"></i> Cancel
+              </button> -->
               <button type="submit" class="btn btn-primary" [disabled]="profileForm.invalid || isLoading">
                 <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
                 {{ isLoading ? 'Saving...' : 'Save Changes' }}
@@ -84,67 +88,80 @@
 
       <!-- Change Password Tab Content -->
       <div *ngIf="activeTab === 'password'" class="card">
-        <div class="card-header">
+        <div class="card-header d-flex justify-content-between align-items-center">
           <h4 class="mb-0">Change Password</h4>
+          <button type="button" class="btn-close ms-auto" aria-label="Close" (click)="onClose()"></button>
         </div>
         <div class="card-body">
           <form [formGroup]="passwordForm" (ngSubmit)="onChangePassword()">
             <div class="mb-3 password-input-group">
               <label for="currentPassword" class="form-label">Current Password</label>
               <div class="input-group">
-                <input [type]="showCurrentPassword ? 'text' : 'password'" class="form-control" id="currentPassword"
-                  formControlName="currentPassword"
-                  [class.is-invalid]="passwordFormControls['currentPassword'].touched && passwordFormControls['currentPassword'].errors">
+                <input [type]="showCurrentPassword ? 'text' : 'password'" 
+                       class="form-control" 
+                       id="currentPassword"
+                       formControlName="currentPassword"
+                       [class.is-invalid]="passwordFormControls['currentPassword'].touched && passwordFormControls['currentPassword'].errors">
                 <button type="button" class="password-toggle" (click)="showCurrentPassword = !showCurrentPassword">
                   <i class="bi" [class.bi-eye]="!showCurrentPassword" [class.bi-eye-slash]="showCurrentPassword"></i>
                 </button>
               </div>
-              <div
-                *ngIf="passwordFormControls['currentPassword'].touched && passwordFormControls['currentPassword'].errors"
-                class="invalid-feedback">
-                <div *ngIf="passwordFormControls['currentPassword'].errors?.['required']">Current password is required
+              <div *ngIf="passwordFormControls['currentPassword'].touched || passwordForm.dirty" 
+                   class="invalid-feedback d-block">
+                <div *ngIf="passwordFormControls['currentPassword'].errors?.['required']">
+                  Current password is required
                 </div>
               </div>
             </div>
-
+            
             <div class="mb-3 password-input-group">
               <label for="newPassword" class="form-label">New Password</label>
               <div class="input-group">
-                <input [type]="showNewPassword ? 'text' : 'password'" class="form-control" id="newPassword"
-                  formControlName="newPassword"
-                  [class.is-invalid]="passwordFormControls['newPassword'].touched && passwordFormControls['newPassword'].errors">
+                <input [type]="showNewPassword ? 'text' : 'password'" 
+                       class="form-control" 
+                       id="newPassword"
+                       formControlName="newPassword"
+                       [class.is-invalid]="passwordFormControls['newPassword'].touched && passwordFormControls['newPassword'].errors">
                 <button type="button" class="password-toggle" (click)="showNewPassword = !showNewPassword">
                   <i class="bi" [class.bi-eye]="!showNewPassword" [class.bi-eye-slash]="showNewPassword"></i>
                 </button>
               </div>
-              <div *ngIf="passwordFormControls['newPassword'].touched && passwordFormControls['newPassword'].errors"
-                class="invalid-feedback">
-                <div *ngIf="passwordFormControls['newPassword'].errors?.['required']">New password is required</div>
-                <div *ngIf="passwordFormControls['newPassword'].errors?.['minlength']">Password must be at least 8
-                  characters long</div>
-                <div *ngIf="passwordFormControls['newPassword'].errors['passwordStrength']">
-                  {{ passwordFormControls['newPassword'].errors['passwordStrength'] }}
+              <div *ngIf="(passwordFormControls['newPassword'].touched || passwordForm.dirty) && passwordFormControls['newPassword'].invalid" 
+                   class="invalid-feedback d-block">
+                <div>
+                  Password must be at least 8 characters long and include at least one uppercase letter, one lowercase
+                  letter, one number, and one special character.
                 </div>
               </div>
-              <div class="form-text">
+              <div *ngIf="!(passwordFormControls['newPassword'].touched || passwordForm.dirty)" class="form-text">
                 Password must be at least 8 characters long and include at least one uppercase letter, one lowercase
                 letter, one number, and one special character.
               </div>
             </div>
-
+            
             <div class="mb-3 password-input-group">
               <label for="confirmPassword" class="form-label">Confirm New Password</label>
               <div class="input-group">
-                <input [type]="showConfirmPassword ? 'text' : 'password'" class="form-control" id="confirmPassword"
-                  formControlName="confirmPassword"
-                  [class.is-invalid]="(passwordForm.touched || passwordForm.dirty) && passwordForm.errors?.['passwordMismatch']">
+                <input [type]="showConfirmPassword ? 'text' : 'password'" 
+                       class="form-control" 
+                       id="confirmPassword"
+                       formControlName="confirmPassword"
+                       [class.is-invalid]="(passwordForm.touched || passwordForm.dirty) && 
+                                          (passwordForm.errors?.['passwordMismatch'] || 
+                                          (passwordFormControls['confirmPassword'].touched && 
+                                           passwordFormControls['confirmPassword'].errors?.['required']))">
                 <button type="button" class="password-toggle" (click)="showConfirmPassword = !showConfirmPassword">
                   <i class="bi" [class.bi-eye]="!showConfirmPassword" [class.bi-eye-slash]="showConfirmPassword"></i>
                 </button>
               </div>
-              <div *ngIf="(passwordForm.touched || passwordForm.dirty) && passwordForm.errors?.['passwordMismatch']"
-                class="invalid-feedback">
+              <div *ngIf="(passwordForm.touched || passwordForm.dirty) && passwordForm.errors?.['passwordMismatch']" 
+                   class="invalid-feedback d-block">
                 Passwords do not match
+              </div>
+              <div *ngIf="(passwordFormControls['confirmPassword'].touched || passwordForm.dirty) && 
+                          passwordFormControls['confirmPassword'].errors?.['required']" 
+                   class="invalid-feedback d-block">
+                Please confirm your new password
               </div>
             </div>
 

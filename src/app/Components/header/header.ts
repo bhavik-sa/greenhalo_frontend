@@ -39,7 +39,7 @@ export class Header implements OnInit, AfterViewInit {
     this.currentUser = this.authService.getProfile();
     this.currentUser.subscribe((response: any) => {
       this.currentUser = response.data;
-      this.profileImage = `${environment.apiUrl}/${this.currentUser.profile_url}`;
+      this.profileImage = this.currentUser.profile_url ? `${environment.apiUrl}/${this.currentUser.profile_url}` : '/assets/admin.webp';
     });
   }
 
