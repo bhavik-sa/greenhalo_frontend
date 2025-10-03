@@ -118,6 +118,7 @@ export class UserManagementComponent implements OnInit {
   showFilters = false;
   isLoadingUserDetails = false;
   userDetailsError: string | null = null;
+  showIntegratedSidebar = false;
   
   // Badge management
   badges: Badge[] = [];

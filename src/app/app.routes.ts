@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { Login } from './Components/login/login';
 import { Dashboard } from './Components/dashboard/dashboard';
-import { Layout } from './Components/layout/layout';
 import { MfaComponent } from './Components/mfa/mfa';
 import { authGuard } from './guards/auth.guard';
 import { MfaSetup } from './Components/mfa-setup/mfa-setup';
@@ -16,6 +15,7 @@ import { BadgeManagementComponent } from './Components/badge/badge';
 import { AuditHistoryComponent } from './Components/audit-history/audit-history';
 import { ProfileComponent } from './Components/profile/profile';
 import { ReportManagementComponent } from './Components/report-management/report-management';
+import { LayoutComponent } from './Components/layout/layout';
 export const routes: Routes = [
     {
         path: '',
@@ -46,7 +46,7 @@ export const routes: Routes = [
     },
     {
         path: '',
-        component: Layout,
+        component: LayoutComponent,
         children: [
             {
                 path: 'dashboard',

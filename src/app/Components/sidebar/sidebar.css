@@ -1,0 +1,77 @@
+/* Sidebar Component Styles - High Specificity */
+
+/* Main sidebar collapsed state - set proper width */
+
+aside.main-sidebar.sidebar-collapse {
+  width: 4.5rem !important;
+  min-width: 4.5rem !important;
+  max-width: 4.5rem !important;
+}
+
+/* Hide brand image when collapsed - Override Bootstrap */
+aside.main-sidebar.sidebar-collapse .brand-image {
+  display: none !important;
+}
+
+/* Hide brand text when collapsed - Override Bootstrap */
+aside.main-sidebar.sidebar-collapse .brand-text {
+  display: none !important;
+}
+
+/* Hide text but keep icons visible and clickable in collapsed state */
+aside.main-sidebar.sidebar-collapse .nav-link p {
+  display: none !important;
+}
+
+/* Ensure icons are visible and properly styled in collapsed state */
+aside.main-sidebar.sidebar-collapse .nav-icon {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  font-size: 1.5rem !important;
+  text-align: center !important;
+}
+
+/* Center icons in collapsed state */
+aside.main-sidebar.sidebar-collapse .nav-link {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.75rem !important;
+  margin: 0 !important;
+}
+
+/* Ensure sidebar maintains proper height and scrolling */
+.main-sidebar {
+  overflow-y: auto !important;
+}
+
+/* Smooth transitions for collapse/expand */
+.main-sidebar {
+  transition: width 0.3s ease-in-out !important;
+}
+
+.nav-link {
+  transition: all 0.3s ease !important;
+}
+
+/* Ensure proper hover effects in collapsed state */
+aside.main-sidebar.sidebar-collapse .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  border-radius: 0.25rem !important;
+}
+
+/* Make sure the sidebar wrapper takes full width in collapsed state */
+aside.main-sidebar.sidebar-collapse .sidebar-wrapper {
+  width: 100% !important;
+}
+
+/* Ensure nav items take full width */
+aside.main-sidebar.sidebar-collapse .nav-item {
+  width: 100% !important;
+}
+
+/* Remove any Bootstrap nav-link padding that might interfere */
+aside.main-sidebar.sidebar-collapse .nav-link {
+  padding: 0.5rem !important;
+}

@@ -1,31 +1,62 @@
-import { Component } from '@angular/core';
-import { Sidebar } from '../sidebar/sidebar';
-import { Header } from '../header/header';
-import { Footer } from '../footer/footer';
-import { RouterOutlet } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterOutlet } from '@angular/router';
+import { Header } from '../header/header';
+import { Sidebar } from '../sidebar/sidebar';
+import { Footer } from '../footer/footer';
 
 @Component({
   selector: 'app-layout',
-  imports: [CommonModule, RouterOutlet, Sidebar, Header, Footer],
-  templateUrl: './layout.html',
-  styleUrls: ['./layout.css'],
-  standalone: true
-})
-export class Layout {
-  sidebarCollapsed = false;
+  standalone: true,
+  imports: [CommonModule, RouterOutlet, Header, Sidebar, Footer],
+  template: `
+    <div class="app-wrapper" [class.sidebar-collapse]="isSidebarCollapsed">
 
-  toggleSidebar() {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
-    // Store the state in localStorage to persist across page reloads
-    localStorage.setItem('sidebarCollapsed', String(this.sidebarCollapsed));
+      <!-- Header Start -->
+      <app-header (toggleSidebarEvent)="toggleSidebar()"></app-header>
+      <!-- Header End -->
+
+      <!-- Sidebar Start -->
+      <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+        <app-sidebar [isCollapsed]="isSidebarCollapsed"></app-sidebar>
+      </aside>
+      <!-- Sidebar End -->
+
+      <!-- Main Start -->
+      <main class="app-main">
+        <router-outlet></router-outlet>
+      </main>
+      <!-- Main End -->
+
+      <!-- Footer Start -->
+      <app-footer></app-footer>
+      <!-- Footer End -->
+
+    </div>
+  `,
+ 
+})
+export class LayoutComponent implements OnInit {
+  isSidebarCollapsed = false;
+
+  ngOnInit(): void {
+    // Initialize sidebar state from localStorage
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    this.isSidebarCollapsed = savedState ? JSON.parse(savedState) : false;
+
+    // Apply initial state to body class
+    if (this.isSidebarCollapsed) {
+      document.body.classList.add('sidebar-collapsed');
+    }
   }
 
-  // Optional: Initialize the sidebar state from localStorage
-  ngOnInit() {
-    const savedState = localStorage.getItem('sidebarCollapsed');
-    if (savedState !== null) {
-      this.sidebarCollapsed = savedState === 'true';
-    }
+  toggleSidebar(): void {
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
+
+    // Save state to localStorage
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(this.isSidebarCollapsed));
+
+    // Apply/remove body class for global state
+    document.body.classList.toggle('sidebar-collapsed', this.isSidebarCollapsed);
   }
 }

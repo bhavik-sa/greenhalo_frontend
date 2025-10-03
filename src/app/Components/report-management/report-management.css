@@ -1,0 +1,49 @@
+/* Scrollable table styles */
+.table-container {
+  max-height: 700px; /* Adjust this value as needed */
+  overflow-y: auto;
+  border: 1px solid #dee2e6; /* Bootstrap table border color */
+  border-radius: 0.375rem; /* Bootstrap border radius */
+}
+
+/* Make table header sticky */
+.table-container table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #f8f9fa; /* Bootstrap light background */
+  box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure table takes full width */
+.table-container table {
+  margin-bottom: 0;
+  width: 100%;
+}
+
+/* Style for better scrollbar appearance */
+.table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .table-container {
+    max-height: 300px; /* Smaller height on mobile */
+  }
+}
